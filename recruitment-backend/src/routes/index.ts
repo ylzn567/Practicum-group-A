@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { createGenericRouter } from "./generic.router";
+import positionsRouter from "./positions.router";
+import stagesRouter from "./stages.router";
 
-import { positionRepository } from "../models/position.model";
 import { jobCategoryRepository } from "../models/jobCategory.model";
-import { stageRepository } from "../models/stage.model";
 import { criterionRepository } from "../models/criterion.model";
 import { companyRepository } from "../models/company.model";
 
@@ -12,21 +12,16 @@ const router = Router();
 // ===== קבוצה א׳ =====
 // filterableFields מגדיר אילו פרמטרים מותרים ב-query string.
 // שדה שלא מופיע כאן פשוט יתעלמו ממנו.
-router.use(
-  "/positions",
-  createGenericRouter(positionRepository, {
-    filterableFields: ["categoryId", "status", "level"],
-  })
-);
+// למשרות יש ראוטר משלהן — יצירת משרה מעתיקה גם את תבנית הקטגוריה
+router.use("/positions", positionsRouter);
 router.use("/job-categories", createGenericRouter(jobCategoryRepository));
-router.use(
-  "/stages",
-  createGenericRouter(stageRepository, { filterableFields: ["positionId"] })
-);
+// לשלבים יש ראוטר משלהם — מחיקת שלב מוחקת גם את הקריטריונים שלו
+router.use("/stages", stagesRouter);
 router.use(
   "/criteria",
   createGenericRouter(criterionRepository, {
     filterableFields: ["stageId", "type"],
+    populatableFields: ["stageId"],
   })
 );
 router.use("/companies", createGenericRouter(companyRepository));

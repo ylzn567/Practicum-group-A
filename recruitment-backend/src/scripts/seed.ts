@@ -14,6 +14,7 @@ import { PositionModel } from "../models/position.model";
 import { StageModel } from "../models/stage.model";
 import { CriterionModel } from "../models/criterion.model";
 import { CompanyModel } from "../models/company.model";
+import { copyTemplateToPosition } from "../services/position.service";
 import { JobCategory, Position, Company } from "../types";
 
 dotenv.config();
@@ -321,46 +322,6 @@ const positions: PositionSeed[] = [
   },
 ];
 
-/**
- * העתקת תבנית הקטגוריה לשלבים וקריטריונים אמיתיים של המשרה.
- * זו הלוגיקה שצריכה לרוץ גם ביצירת משרה חדשה — כשנבנה את זה בשרת,
- * להוציא את הפונקציה לשירות ייעודי במקום לשכפל אותה כאן.
- */
-async function copyTemplateToPosition(
-  positionId: mongoose.Types.ObjectId,
-  category: JobCategory
-): Promise<number> {
-  let criteriaCount = 0;
-
-  for (const stageTemplate of category.stageTemplates ?? []) {
-    const stage = await StageModel.create({
-      positionId,
-      name: stageTemplate.name,
-      order: stageTemplate.order,
-      weightPercent: stageTemplate.weightPercent,
-      quota: stageTemplate.quota,
-    });
-
-    const criteria = (stageTemplate.criteria ?? []).map((criterion) => ({
-      stageId: stage._id,
-      name: criterion.name,
-      type: criterion.type,
-      scoringMethod: criterion.scoringMethod,
-      targetValue: criterion.targetValue,
-      weightPercent: criterion.weightPercent,
-      maxScore: criterion.maxScore,
-      descriptionGuide: criterion.descriptionGuide,
-    }));
-
-    if (criteria.length > 0) {
-      await CriterionModel.insertMany(criteria);
-      criteriaCount += criteria.length;
-    }
-  }
-
-  return criteriaCount;
-}
-
 async function seed(): Promise<void> {
   if (!process.argv.includes("--reset")) {
     console.error(
@@ -402,8 +363,9 @@ async function seed(): Promise<void> {
       categoryId: categoryIdByName.get(categoryName),
     });
 
-    criteriaTotal += await copyTemplateToPosition(position._id, category);
-    stagesTotal += category.stageTemplates?.length ?? 0;
+    const copied = await copyTemplateToPosition(position._id, category);
+    stagesTotal += copied.stagesCreated;
+    criteriaTotal += copied.criteriaCreated;
   }
 
   console.log(`נוצרו ${positions.length} משרות`);

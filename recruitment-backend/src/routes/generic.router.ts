@@ -8,6 +8,11 @@ export interface GenericRouterOptions {
    * אופרטורים של mongo ($ne, $gt) דרך הכתובת.
    */
   filterableFields?: string[];
+  /**
+   * אילו שדות מותר לבקש להרחיב דרך ?populate=a,b —
+   * מחליף ObjectId באובייקט המלא מהאוסף שאליו הוא מצביע.
+   */
+  populatableFields?: string[];
 }
 
 // יוצר router עם CRUD מלא לכל אוסף — לא משכפלים קוד לכל ישות
@@ -16,7 +21,7 @@ export function createGenericRouter<T>(
   options: GenericRouterOptions = {}
 ): Router {
   const router = Router();
-  const { filterableFields = [] } = options;
+  const { filterableFields = [], populatableFields = [] } = options;
 
   // בונה פילטר רק מהשדות שהוגדרו במפורש, ורק מערכים שהם מחרוזת
   function buildFilter(query: Request["query"]): Record<string, string> {
@@ -32,6 +37,16 @@ export function createGenericRouter<T>(
     return filter;
   }
 
+  // רק שדות מהרשימה המאושרת, כדי שלא יבקשו להרחיב שדה שרירותי
+  function buildPopulate(query: Request["query"]): string[] {
+    const raw = query.populate;
+    if (typeof raw !== "string") return [];
+    return raw
+      .split(",")
+      .map((field) => field.trim())
+      .filter((field) => populatableFields.includes(field));
+  }
+
   // ObjectId לא תקין גורם ל-CastError; זו בקשה שגויה ולא תקלת שרת
   function handleError(err: unknown, res: Response, fallbackStatus: number) {
     const error = err as Error;
@@ -44,7 +59,10 @@ export function createGenericRouter<T>(
   // GET /  — כל המסמכים, עם סינון אופציונלי לפי query string
   router.get("/", async (req: Request, res: Response) => {
     try {
-      const items = await repository.getAll(buildFilter(req.query));
+      const items = await repository.getAll(
+        buildFilter(req.query),
+        buildPopulate(req.query)
+      );
       res.json(items);
     } catch (err) {
       handleError(err, res, 500);
@@ -54,7 +72,10 @@ export function createGenericRouter<T>(
   // GET /:id  — מסמך לפי מזהה
   router.get("/:id", async (req: Request, res: Response) => {
     try {
-      const item = await repository.getById(String(req.params.id));
+      const item = await repository.getById(
+        String(req.params.id),
+        buildPopulate(req.query)
+      );
       if (!item) return res.status(404).json({ error: "Not found" });
       res.json(item);
     } catch (err) {

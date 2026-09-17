@@ -7,11 +7,8 @@ import {
   Table,
   Text,
 } from "../../design-system/components";
-import {
-  getJobCategories,
-  getPositionById,
-  updatePosition,
-} from "../../services/positions.service";
+import { getPositionById, updatePosition } from "../../services/positions.service";
+import { getJobCategories } from "../../services/jobCategories.service";
 import { getCriteriaByStage, getStagesByPosition } from "../../services/stages.service";
 import {
   POSITION_LEVEL_LABELS,

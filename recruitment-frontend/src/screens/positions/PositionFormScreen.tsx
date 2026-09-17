@@ -12,15 +12,16 @@ import {
 } from "../../design-system/components";
 import {
   createPosition,
-  getJobCategories,
   getPositionById,
   updatePosition,
 } from "../../services/positions.service";
+import { getJobCategories } from "../../services/jobCategories.service";
 import {
   POSITION_LEVEL_LABELS,
   POSITION_STATUS_LABELS,
 } from "../../types/position";
-import type { JobCategory, PositionLevel, PositionStatus } from "../../types/position";
+import type { PositionLevel, PositionStatus } from "../../types/position";
+import type { JobCategory } from "../../types/jobCategory";
 import {
   EMPTY_POSITION_FORM,
   toFormValues,

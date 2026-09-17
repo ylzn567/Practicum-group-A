@@ -26,12 +26,6 @@ export interface Position {
   updatedAt?: string;
 }
 
-export interface JobCategory {
-  _id: string;
-  name: string;
-  description?: string;
-}
-
 export const POSITION_STATUS_LABELS: Record<PositionStatus, string> = {
   DRAFT: "טיוטה",
   IN_EVALUATION: "בהערכה",

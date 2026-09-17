@@ -1,5 +1,5 @@
 import { apiRequest } from "./api";
-import type { JobCategory, Position } from "../types/position";
+import type { Position } from "../types/position";
 
 export function getPositions(): Promise<Position[]> {
   return apiRequest<Position[]>("/positions");
@@ -7,10 +7,6 @@ export function getPositions(): Promise<Position[]> {
 
 export function getPositionById(id: string): Promise<Position> {
   return apiRequest<Position>(`/positions/${id}`);
-}
-
-export function getJobCategories(): Promise<JobCategory[]> {
-  return apiRequest<JobCategory[]>("/job-categories");
 }
 
 export function createPosition(data: Partial<Position>): Promise<Position> {

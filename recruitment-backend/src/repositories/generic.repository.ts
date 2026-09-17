@@ -15,12 +15,14 @@ export class Repository<T> {
   }
 
   // filter ריק = כל המסמכים, כך שקריאות קיימות ל-getAll() לא משתנות
-  async getAll(filter: QueryFilter = {}): Promise<T[]> {
-    return this.model.find(filter);
+  async getAll(filter: QueryFilter = {}, populate: string[] = []): Promise<T[]> {
+    const query = this.model.find(filter);
+    return populate.length > 0 ? query.populate(populate) : query;
   }
 
-  async getById(id: string): Promise<T | null> {
-    return this.model.findById(id);
+  async getById(id: string, populate: string[] = []): Promise<T | null> {
+    const query = this.model.findById(id);
+    return populate.length > 0 ? query.populate(populate) : query;
   }
 
   async update(id: string, data: Partial<T>): Promise<T | null> {

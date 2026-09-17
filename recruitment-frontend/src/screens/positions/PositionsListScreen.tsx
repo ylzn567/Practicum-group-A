@@ -9,13 +9,15 @@ import {
   Table,
   Text,
 } from "../../design-system/components";
-import { getJobCategories, getPositions } from "../../services/positions.service";
+import { getPositions } from "../../services/positions.service";
+import { getJobCategories } from "../../services/jobCategories.service";
 import {
   POSITION_LEVEL_LABELS,
   POSITION_STATUS_LABELS,
   POSITION_STATUS_TONES,
 } from "../../types/position";
-import type { JobCategory, Position, PositionStatus } from "../../types/position";
+import type { Position, PositionStatus } from "../../types/position";
+import type { JobCategory } from "../../types/jobCategory";
 import { formatCurrency, formatDate, formatText } from "../../utils/format";
 import "./PositionsListScreen.css";
 
