@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Button, Card, Heading, Text } from "./design-system/components";
+import { Button } from "./design-system/components";
 import DesignSystemPreview from "./design-system/DesignSystemPreview";
 import { AuthScreen } from "./screens/auth/AuthScreen";
 import { PositionsListScreen } from "./screens/positions/PositionsListScreen";
 import { PositionFormScreen } from "./screens/positions/PositionFormScreen";
+import { PositionDetailScreen } from "./screens/positions/PositionDetailScreen";
 import { StagesBuilderScreen } from "./screens/stages/StagesBuilderScreen";
 import { logout } from "./services/auth.service";
 import type { AuthUser } from "./types/auth";
@@ -81,33 +82,14 @@ export default function App() {
       )}
 
       {view.name === "detail" && (
-        // עד שמסך A5 ייבנה — נקודת מעבר לשאר מסכי המשרה
-        <div className="page">
-          <Card>
-            <Heading level={3}>כרטיס משרה (מסך A5)</Heading>
-            <Text>המסך הזה עדיין לא נבנה. מזהה המשרה: {view.positionId}</Text>
-            <div className="position-form__actions">
-              <Button
-                onClick={() =>
-                  setView({ name: "stages", positionId: view.positionId })
-                }
-              >
-                שלבים וקריטריונים
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  setView({ name: "edit", positionId: view.positionId })
-                }
-              >
-                עריכת המשרה
-              </Button>
-              <Button variant="secondary" onClick={showList}>
-                חזרה לרשימת המשרות
-              </Button>
-            </div>
-          </Card>
-        </div>
+        <PositionDetailScreen
+          positionId={view.positionId}
+          onEdit={() => setView({ name: "edit", positionId: view.positionId })}
+          onOpenStages={() =>
+            setView({ name: "stages", positionId: view.positionId })
+          }
+          onBack={showList}
+        />
       )}
     </>
   );
