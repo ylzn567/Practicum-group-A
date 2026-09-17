@@ -106,13 +106,13 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
 
           <form onSubmit={handleSubmit} noValidate>
             {serverError && (
-              <p className="auth__alert" role="alert">
+              <p className="form-alert" role="alert">
                 {serverError}
               </p>
             )}
 
             {isRegister && (
-              <div className={errors.name ? "auth__invalid" : undefined}>
+              <div className={errors.name ? "form-invalid" : undefined}>
                 <Field label="שם מלא" hint={errors.name}>
                   <Input
                     value={values.name}
@@ -124,7 +124,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
               </div>
             )}
 
-            <div className={errors.email ? "auth__invalid" : undefined}>
+            <div className={errors.email ? "form-invalid" : undefined}>
               <Field label="אימייל" hint={errors.email}>
                 <Input
                   type="email"
@@ -137,7 +137,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
               </Field>
             </div>
 
-            <div className={errors.password ? "auth__invalid" : undefined}>
+            <div className={errors.password ? "form-invalid" : undefined}>
               <Field label="סיסמה" hint={errors.password}>
                 <Input
                   type="password"
@@ -150,7 +150,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             </div>
 
             {isRegister && (
-              <div className={errors.confirmPassword ? "auth__invalid" : undefined}>
+              <div className={errors.confirmPassword ? "form-invalid" : undefined}>
                 <Field label="אימות סיסמה" hint={errors.confirmPassword}>
                   <Input
                     type="password"

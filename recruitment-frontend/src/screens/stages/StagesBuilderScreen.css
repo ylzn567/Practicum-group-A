@@ -1,0 +1,156 @@
+.stages__summary,
+.stage-card {
+  margin-bottom: 16px;
+}
+
+/* ===== מחוון משקל ===== */
+
+.weight-meter {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--rf-font-display);
+  font-size: 13px;
+}
+
+.weight-meter__label {
+  color: var(--rf-ink-muted);
+  font-weight: 600;
+}
+
+.weight-meter__value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-meter__bar {
+  height: 6px;
+  min-width: 80px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--rf-ink-faint) 25%, transparent);
+  overflow: hidden;
+}
+
+.weight-meter__fill {
+  display: block;
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.weight-meter--ok .weight-meter__value {
+  color: var(--rf-status-success);
+}
+
+.weight-meter--ok .weight-meter__fill {
+  background: var(--rf-status-success);
+}
+
+.weight-meter--off .weight-meter__value,
+.weight-meter--off .weight-meter__hint {
+  color: var(--rf-status-pending);
+}
+
+.weight-meter--off .weight-meter__fill {
+  background: var(--rf-status-pending);
+}
+
+.weight-meter__hint {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ===== כרטיס שלב ===== */
+
+.stage-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stage-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.stage-card__chevron {
+  color: var(--rf-ink-faint);
+  font-size: 12px;
+}
+
+.stage-card__header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stage-card__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0 16px;
+  margin-top: 16px;
+}
+
+.stage-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stage-card__row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.stage-card__criteria {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rf-line);
+}
+
+.stage-card__criteria-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.criterion-editor {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--rf-line-strong);
+  border-radius: 4px;
+  background: var(--rf-paper);
+}
+
+.criterion-editor__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 16px;
+}
+
+@media (max-width: 720px) {
+  .stage-card__grid,
+  .criterion-editor__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .weight-meter {
+    grid-template-columns: 1fr auto;
+  }
+
+  .weight-meter__bar {
+    grid-column: 1 / -1;
+  }
+}

@@ -42,3 +42,29 @@ body {
   font-size: 13px;
   color: var(--rf-ink-muted);
 }
+
+/*
+  מצב שגיאה לשדה של מערכת העיצוב — משותף לכל הטפסים.
+  עוטפים <Field> ב-div עם המחלקה הזו ומעבירים את הודעת השגיאה כ-hint.
+  ה-fallback הוא הצבע של .rf-button--danger; ברגע ש-tokens.css יגדיר
+  --rf-danger, כל הטפסים יתיישרו אליו אוטומטית.
+*/
+.form-invalid .rf-input,
+.form-invalid .rf-select,
+.form-invalid .rf-textarea {
+  border-color: var(--rf-danger, #b5453a);
+}
+
+.form-invalid .rf-field-hint {
+  color: var(--rf-danger, #b5453a);
+}
+
+.form-alert {
+  font-family: var(--rf-font-body);
+  font-size: 14px;
+  color: var(--rf-danger, #b5453a);
+  background: color-mix(in srgb, var(--rf-danger, #b5453a) 10%, transparent);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}

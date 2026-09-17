@@ -43,24 +43,7 @@
   box-shadow: var(--rf-shadow);
 }
 
-/* מצב שגיאה — נשען על רכיבי מערכת העיצוב בלי לשנות אותם */
-.auth__invalid .rf-input {
-  border-color: #b5453a;
-}
-
-.auth__invalid .rf-field-hint {
-  color: #b5453a;
-}
-
-.auth__alert {
-  font-family: var(--rf-font-body);
-  font-size: 14px;
-  color: #b5453a;
-  background: color-mix(in srgb, #b5453a 10%, transparent);
-  border-radius: 4px;
-  padding: 10px 14px;
-  margin: 0 0 16px;
-}
+/* מצב השגיאה מוגדר ב-app.css (.form-invalid / .form-alert) ומשותף לכל הטפסים */
 
 .auth__submit .rf-button {
   width: 100%;

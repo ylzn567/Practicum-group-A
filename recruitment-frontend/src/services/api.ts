@@ -40,8 +40,14 @@ export async function apiRequest<T>(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      (data as { error?: string } | null)?.error ?? `שגיאת שרת (${response.status})`;
+    // 404 על נתיב API מסמן כמעט תמיד endpoint שעוד לא נכתב בשרת,
+    // ולא "לא נמצא". מפרידים בין השניים כדי לא לשלוח לחפש באג בצד הלקוח.
+    const fallback =
+      response.status === 404
+        ? `הנתיב ${path} לא קיים בשרת — ה-endpoint עדיין לא נכתב`
+        : `שגיאת שרת (${response.status})`;
+
+    const message = (data as { error?: string } | null)?.error ?? fallback;
     throw new Error(message);
   }
 

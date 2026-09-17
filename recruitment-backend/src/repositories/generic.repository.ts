@@ -1,5 +1,12 @@
 import { Model } from "mongoose";
 
+/**
+ * פילטר שליפה פשוט: שם שדה -> ערך להשוואה מדויקת.
+ * mongoose 9 כבר לא מייצא FilterQuery, וממילא הראוטר בונה
+ * רק זוגות של מחרוזות מתוך רשימת שדות מאושרת.
+ */
+export type QueryFilter = Record<string, string>;
+
 export class Repository<T> {
   constructor(private model: Model<T>) {}
 
@@ -7,8 +14,9 @@ export class Repository<T> {
     return this.model.create(data);
   }
 
-  async getAll(): Promise<T[]> {
-    return this.model.find();
+  // filter ריק = כל המסמכים, כך שקריאות קיימות ל-getAll() לא משתנות
+  async getAll(filter: QueryFilter = {}): Promise<T[]> {
+    return this.model.find(filter);
   }
 
   async getById(id: string): Promise<T | null> {
