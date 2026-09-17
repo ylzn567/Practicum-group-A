@@ -1,7 +1,13 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Button } from "../../components/ui/Button";
-import { TextField } from "../../components/ui/TextField";
+import {
+  Button,
+  Card,
+  Field,
+  Heading,
+  Input,
+  Text,
+} from "../../design-system/components";
 import { login, register } from "../../services/auth.service";
 import type { AuthUser } from "../../types/auth";
 import { validateAuthForm } from "./validation";
@@ -66,107 +72,123 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
 
   return (
     <main className="auth">
-      <section className="auth__card">
-        <header className="auth__header">
-          <h1 className="auth__title">מערכת הגיוס</h1>
-          <p className="auth__subtitle">
-            {isRegister
-              ? "יצירת משתמש חדש לצוות המשרד"
-              : "כניסה למערכת עם פרטי המשתמש שלך"}
-          </p>
-        </header>
+      <div className="auth__card">
+        <Card>
+          <header className="auth__header">
+            <Heading level={1}>מערכת הגיוס</Heading>
+            <Text>
+              {isRegister
+                ? "יצירת משתמש חדש לצוות המשרד"
+                : "כניסה למערכת עם פרטי המשתמש שלך"}
+            </Text>
+          </header>
 
-        <div className="auth__tabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!isRegister}
-            className={`auth__tab ${!isRegister ? "auth__tab--active" : ""}`}
-            onClick={() => switchMode("login")}
-          >
-            כניסה
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={isRegister}
-            className={`auth__tab ${isRegister ? "auth__tab--active" : ""}`}
-            onClick={() => switchMode("register")}
-          >
-            הרשמה
-          </button>
-        </div>
+          <div className="auth__tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isRegister}
+              className={`auth__tab ${!isRegister ? "auth__tab--active" : ""}`}
+              onClick={() => switchMode("login")}
+            >
+              כניסה
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isRegister}
+              className={`auth__tab ${isRegister ? "auth__tab--active" : ""}`}
+              onClick={() => switchMode("register")}
+            >
+              הרשמה
+            </button>
+          </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          {serverError && (
-            <div className="ui-alert ui-alert--error" role="alert">
-              {serverError}
+          <form onSubmit={handleSubmit} noValidate>
+            {serverError && (
+              <p className="auth__alert" role="alert">
+                {serverError}
+              </p>
+            )}
+
+            {isRegister && (
+              <div className={errors.name ? "auth__invalid" : undefined}>
+                <Field label="שם מלא" hint={errors.name}>
+                  <Input
+                    value={values.name}
+                    autoComplete="name"
+                    aria-invalid={Boolean(errors.name)}
+                    onChange={(e) => updateField("name", e.target.value)}
+                  />
+                </Field>
+              </div>
+            )}
+
+            <div className={errors.email ? "auth__invalid" : undefined}>
+              <Field label="אימייל" hint={errors.email}>
+                <Input
+                  type="email"
+                  dir="ltr"
+                  value={values.email}
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                  onChange={(e) => updateField("email", e.target.value)}
+                />
+              </Field>
             </div>
-          )}
+
+            <div className={errors.password ? "auth__invalid" : undefined}>
+              <Field label="סיסמה" hint={errors.password}>
+                <Input
+                  type="password"
+                  value={values.password}
+                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  aria-invalid={Boolean(errors.password)}
+                  onChange={(e) => updateField("password", e.target.value)}
+                />
+              </Field>
+            </div>
+
+            {isRegister && (
+              <div className={errors.confirmPassword ? "auth__invalid" : undefined}>
+                <Field label="אימות סיסמה" hint={errors.confirmPassword}>
+                  <Input
+                    type="password"
+                    value={values.confirmPassword}
+                    autoComplete="new-password"
+                    aria-invalid={Boolean(errors.confirmPassword)}
+                    onChange={(e) => updateField("confirmPassword", e.target.value)}
+                  />
+                </Field>
+              </div>
+            )}
+
+            <div className="auth__submit">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "רגע..." : isRegister ? "הרשמה" : "כניסה"}
+              </Button>
+            </div>
+          </form>
 
           {isRegister && (
-            <TextField
-              label="שם מלא"
-              value={values.name}
-              error={errors.name}
-              autoComplete="name"
-              onChange={(e) => updateField("name", e.target.value)}
-            />
+            <p className="auth__note">
+              משתמש חדש נוצר ללא הרשאות. מנהל המערכת משייך לך פרופיל הרשאות לפני
+              הכניסה הראשונה.
+            </p>
           )}
 
-          <TextField
-            label="אימייל"
-            type="email"
-            dir="ltr"
-            value={values.email}
-            error={errors.email}
-            autoComplete="email"
-            onChange={(e) => updateField("email", e.target.value)}
-          />
-
-          <TextField
-            label="סיסמה"
-            type="password"
-            value={values.password}
-            error={errors.password}
-            autoComplete={isRegister ? "new-password" : "current-password"}
-            onChange={(e) => updateField("password", e.target.value)}
-          />
-
-          {isRegister && (
-            <TextField
-              label="אימות סיסמה"
-              type="password"
-              value={values.confirmPassword}
-              error={errors.confirmPassword}
-              autoComplete="new-password"
-              onChange={(e) => updateField("confirmPassword", e.target.value)}
-            />
-          )}
-
-          <Button type="submit" block disabled={isSubmitting}>
-            {isSubmitting ? "רגע..." : isRegister ? "הרשמה" : "כניסה"}
-          </Button>
-        </form>
-
-        {isRegister && (
-          <p className="auth__note">
-            משתמש חדש נוצר ללא הרשאות. מנהל המערכת משייך לך פרופיל הרשאות לפני
-            הכניסה הראשונה.
+          <p className="auth__switch">
+            {isRegister ? "יש לך כבר משתמש?" : "אין לך עדיין משתמש?"}{" "}
+            <button
+              type="button"
+              className="auth__link"
+              onClick={() => switchMode(isRegister ? "login" : "register")}
+            >
+              {isRegister ? "כניסה" : "הרשמה"}
+            </button>
           </p>
-        )}
-
-        <p className="auth__switch">
-          {isRegister ? "יש לך כבר משתמש?" : "אין לך עדיין משתמש?"}{" "}
-          <button
-            type="button"
-            className="auth__link"
-            onClick={() => switchMode(isRegister ? "login" : "register")}
-          >
-            {isRegister ? "כניסה" : "הרשמה"}
-          </button>
-        </p>
-      </section>
+        </Card>
+      </div>
     </main>
   );
 }
