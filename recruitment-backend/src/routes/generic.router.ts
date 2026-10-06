@@ -1,117 +1,68 @@
-import { Router, Request, Response } from "express";
-import { Repository } from "../repositories/generic.repository";
+import { Request, Router } from "express";
+import { QueryFilter, Repository } from "../repositories/generic.repository";
 
-export interface GenericRouterOptions {
-  /**
-   * אילו שדות מותר לסנן לפיהם ב-query string.
-   * כל שאר הפרמטרים מתעלמים מהם — כדי שאי אפשר יהיה להזריק
-   * אופרטורים של mongo ($ne, $gt) דרך הכתובת.
-   */
+export interface GenericRouterOptions<T> {
+  /** שדות שמותר לסנן לפיהם ב-query string. כל השאר מתעלמים מהם (מונע הזרקת $ne / $gt) */
   filterableFields?: string[];
-  /**
-   * אילו שדות מותר לבקש להרחיב דרך ?populate=a,b —
-   * מחליף ObjectId באובייקט המלא מהאוסף שאליו הוא מצביע.
-   */
+  /** שדות שמותר להרחיב ב-?populate=a,b: ObjectId מוחלף באובייקט המלא */
   populatableFields?: string[];
+  /** דורס את היצירה הגנרית, כשיצירה כוללת לוגיקה נוספת */
+  create?: (body: Partial<T>) => Promise<T>;
+  /** דורס את המחיקה הגנרית, למשל מחיקה מדורגת */
+  remove?: (id: string) => Promise<unknown>;
 }
 
-// יוצר router עם CRUD מלא לכל אוסף — לא משכפלים קוד לכל ישות
+const NOT_FOUND = { error: "Not found" };
+const text = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value.trim() : undefined;
+
+/** CRUD מלא לכל אוסף. שגיאות מטופלות ב-errorHandler, ולכן אין כאן try/catch */
 export function createGenericRouter<T>(
   repository: Repository<T>,
-  options: GenericRouterOptions = {}
+  {
+    filterableFields = [],
+    populatableFields = [],
+    create = (body) => repository.add(body),
+    remove = (id) => repository.remove(id),
+  }: GenericRouterOptions<T> = {}
 ): Router {
   const router = Router();
-  const { filterableFields = [], populatableFields = [] } = options;
+  const id = (req: Request) => String(req.params.id);
 
-  // בונה פילטר רק מהשדות שהוגדרו במפורש, ורק מערכים שהם מחרוזת
-  function buildFilter(query: Request["query"]): Record<string, string> {
-    const filter: Record<string, string> = {};
+  const filterOf = (query: Request["query"]): QueryFilter =>
+    Object.fromEntries(
+      filterableFields.flatMap((field) => {
+        const value = text(query[field]);
+        return value ? [[field, value]] : [];
+      })
+    );
 
-    for (const field of filterableFields) {
-      const value = query[field];
-      if (typeof value === "string" && value.trim()) {
-        filter[field] = value.trim();
-      }
-    }
-
-    return filter;
-  }
-
-  // רק שדות מהרשימה המאושרת, כדי שלא יבקשו להרחיב שדה שרירותי
-  function buildPopulate(query: Request["query"]): string[] {
-    const raw = query.populate;
-    if (typeof raw !== "string") return [];
-    return raw
-      .split(",")
+  const populateOf = (query: Request["query"]) =>
+    (text(query.populate)?.split(",") ?? [])
       .map((field) => field.trim())
       .filter((field) => populatableFields.includes(field));
-  }
 
-  // ObjectId לא תקין גורם ל-CastError; זו בקשה שגויה ולא תקלת שרת
-  function handleError(err: unknown, res: Response, fallbackStatus: number) {
-    const error = err as Error;
-    if (error.name === "CastError") {
-      return res.status(400).json({ error: `ערך לא תקין: ${error.message}` });
-    }
-    return res.status(fallbackStatus).json({ error: error.message });
-  }
-
-  // GET /  — כל המסמכים, עם סינון אופציונלי לפי query string
-  router.get("/", async (req: Request, res: Response) => {
-    try {
-      const items = await repository.getAll(
-        buildFilter(req.query),
-        buildPopulate(req.query)
-      );
-      res.json(items);
-    } catch (err) {
-      handleError(err, res, 500);
-    }
+  router.get("/", async (req, res) => {
+    res.json(await repository.getAll(filterOf(req.query), populateOf(req.query)));
   });
 
-  // GET /:id  — מסמך לפי מזהה
-  router.get("/:id", async (req: Request, res: Response) => {
-    try {
-      const item = await repository.getById(
-        String(req.params.id),
-        buildPopulate(req.query)
-      );
-      if (!item) return res.status(404).json({ error: "Not found" });
-      res.json(item);
-    } catch (err) {
-      handleError(err, res, 500);
-    }
+  router.get("/:id", async (req, res) => {
+    const item = await repository.getById(id(req), populateOf(req.query));
+    item ? res.json(item) : res.status(404).json(NOT_FOUND);
   });
 
-  // POST /  — יצירת מסמך חדש
-  router.post("/", async (req: Request, res: Response) => {
-    try {
-      const created = await repository.add(req.body);
-      res.status(201).json(created);
-    } catch (err) {
-      handleError(err, res, 400);
-    }
+  router.post("/", async (req, res) => {
+    res.status(201).json(await create(req.body));
   });
 
-  // PUT /:id  — עדכון מסמך
-  router.put("/:id", async (req: Request, res: Response) => {
-    try {
-      const updated = await repository.update(String(req.params.id), req.body);
-      if (!updated) return res.status(404).json({ error: "Not found" });
-      res.json(updated);
-    } catch (err) {
-      handleError(err, res, 400);
-    }
+  router.put("/:id", async (req, res) => {
+    const updated = await repository.update(id(req), req.body);
+    updated ? res.json(updated) : res.status(404).json(NOT_FOUND);
   });
 
-  // DELETE /:id  — מחיקת מסמך
-  router.delete("/:id", async (req: Request, res: Response) => {
-    try {
-      await repository.remove(String(req.params.id));
-      res.status(204).send();
-    } catch (err) {
-      handleError(err, res, 500);
-    }
+  router.delete("/:id", async (req, res) => {
+    await remove(id(req));
+    res.status(204).send();
   });
 
   return router;

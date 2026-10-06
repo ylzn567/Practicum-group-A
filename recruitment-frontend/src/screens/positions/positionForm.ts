@@ -1,8 +1,13 @@
-import type { Position, PositionLevel, PositionStatus } from "../../types/position";
+import { toFormValues } from "../../hooks/useForm";
+import type { FormErrors } from "../../hooks/useForm";
+import type { Position } from "../../types/position";
+import { num, onlyErrors, positiveError, text } from "../../utils/validation";
 
-// כל השדות נשמרים כמחרוזות — זה מה שמחזירים שדות טופס.
-// ההמרה למספרים ולתאריך קורית פעם אחת, ב-toPositionPayload.
-export interface PositionFormValues {
+/** תקרת שעות חודשיות. אותו ערך נאכף גם בשרת (constants.ts) */
+export const MAX_MONTHLY_HOURS = 182;
+
+// כל השדות נשמרים כמחרוזות (כמו שהדפדפן מחזיר), וההמרה למספרים ולתאריך קורית פעם אחת ב-toPayload
+export interface PositionFormValues extends Record<string, string> {
   title: string;
   categoryId: string;
   clusterCode: string;
@@ -15,8 +20,6 @@ export interface PositionFormValues {
   status: string;
   submissionDeadline: string;
 }
-
-export type PositionFormErrors = Partial<Record<keyof PositionFormValues, string>>;
 
 export const EMPTY_POSITION_FORM: PositionFormValues = {
   title: "",
@@ -32,109 +35,52 @@ export const EMPTY_POSITION_FORM: PositionFormValues = {
   submissionDeadline: "",
 };
 
-/** התאריך של היום בפורמט של <input type="date"> — לפי השעון המקומי, לא UTC */
+/** התאריך של היום בפורמט של <input type="date">, לפי השעון המקומי ולא UTC */
 export function todayInputValue(): string {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   return now.toISOString().slice(0, 10);
 }
 
-function toDateInputValue(iso?: string): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
+export const positionToForm = (position: Position): PositionFormValues => ({
+  ...toFormValues(EMPTY_POSITION_FORM, position),
+  submissionDeadline: position.submissionDeadline?.slice(0, 10) ?? "", // החלק של התאריך ב-ISO
+});
 
-export function toFormValues(position: Position): PositionFormValues {
-  return {
-    title: position.title ?? "",
-    categoryId: position.categoryId ?? "",
-    clusterCode: position.clusterCode ?? "",
-    roleCode: position.roleCode ?? "",
-    level: position.level ?? "",
-    description: position.description ?? "",
-    monthlyHours: position.monthlyHours?.toString() ?? "",
-    maxHourlyRate: position.maxHourlyRate?.toString() ?? "",
-    durationMonths: position.durationMonths?.toString() ?? "",
-    status: position.status ?? "DRAFT",
-    submissionDeadline: toDateInputValue(position.submissionDeadline),
-  };
-}
+/** שדה ריק נשלח כ-undefined ולא כמחרוזת ריקה, אחרת mongoose דוחה אותו מול ה-enum של level ו-status */
+export const positionToPayload = (values: PositionFormValues): Partial<Position> => ({
+  title: values.title.trim(),
+  categoryId: text(values.categoryId),
+  clusterCode: text(values.clusterCode),
+  roleCode: text(values.roleCode),
+  level: text(values.level) as Position["level"],
+  description: text(values.description),
+  monthlyHours: num(values.monthlyHours),
+  maxHourlyRate: num(values.maxHourlyRate),
+  durationMonths: num(values.durationMonths),
+  status: text(values.status) as Position["status"],
+  submissionDeadline: text(values.submissionDeadline),
+});
 
-/**
- * שדה ריק נשלח כ-undefined ולא כמחרוזת ריקה — אחרת mongoose
- * ידחה "" מול ה-enum של level ו-status.
- */
-export function toPositionPayload(values: PositionFormValues): Partial<Position> {
-  const text = (value: string) => (value.trim() ? value.trim() : undefined);
-  const num = (value: string) => (value.trim() ? Number(value) : undefined);
-
-  return {
-    title: values.title.trim(),
-    categoryId: text(values.categoryId),
-    clusterCode: text(values.clusterCode),
-    roleCode: text(values.roleCode),
-    level: (text(values.level) as PositionLevel | undefined) ?? undefined,
-    description: text(values.description),
-    monthlyHours: num(values.monthlyHours),
-    maxHourlyRate: num(values.maxHourlyRate),
-    durationMonths: num(values.durationMonths),
-    status: (text(values.status) as PositionStatus | undefined) ?? undefined,
-    submissionDeadline: text(values.submissionDeadline),
-  };
-}
-
-function validatePositiveNumber(value: string, label: string): string | undefined {
-  if (!value.trim()) return undefined;
-  const parsed = Number(value);
-  if (Number.isNaN(parsed)) return `${label} חייב להיות מספר`;
-  if (parsed <= 0) return `${label} חייב להיות גדול מאפס`;
-  return undefined;
-}
-
-export function validatePositionForm(
-  values: PositionFormValues
-): PositionFormErrors {
-  const errors: PositionFormErrors = {};
-
-  if (values.title.trim().length < 2) {
-    errors.title = "יש להזין כותרת למשרה";
-  }
-
-  // הקטגוריה קובעת את תבנית השלבים והקריטריונים, ולכן חובה ביצירה
-  if (!values.categoryId) {
-    errors.categoryId = "יש לבחור קטגוריית משרה";
-  }
-
-  const hoursErr = validatePositiveNumber(values.monthlyHours, "היקף שעות חודשי");
-  if (hoursErr) {
-    errors.monthlyHours = hoursErr;
-  } else if (values.monthlyHours.trim() && Number(values.monthlyHours) > 182) {
-    errors.monthlyHours = "היקף שעות חודשי לא יכול לעלות על 182";
-  }
-
-  errors.maxHourlyRate = validatePositiveNumber(values.maxHourlyRate, "תעריף מרבי");
-
-  const duration = validatePositiveNumber(values.durationMonths, "משך ההתקשרות");
-  if (duration) {
-    errors.durationMonths = duration;
-  } else if (values.durationMonths.trim() && !Number.isInteger(Number(values.durationMonths))) {
-    errors.durationMonths = "משך ההתקשרות חייב להיות מספר חודשים שלם";
-  }
-
-  // גם ביצירה וגם בעריכה. השוואת מחרוזות "YYYY-MM-DD" בטוחה מבחינת אזור זמן
-  if (
-    values.submissionDeadline &&
-    values.submissionDeadline < todayInputValue()
-  ) {
-    errors.submissionDeadline = "המועד האחרון להגשה לא יכול להיות מוקדם מהיום";
-  }
-
-  // מנקים מפתחות שקיבלו undefined כדי ש-Object.keys ישקף רק שגיאות אמיתיות
-  (Object.keys(errors) as (keyof PositionFormErrors)[]).forEach((key) => {
-    if (!errors[key]) delete errors[key];
+export const validatePositionForm = (values: PositionFormValues): FormErrors<PositionFormValues> =>
+  onlyErrors({
+    title: values.title.trim().length < 2 ? "יש להזין כותרת למשרה" : undefined,
+    // הקטגוריה קובעת את תבנית השלבים והקריטריונים, ולכן חובה
+    categoryId: values.categoryId ? undefined : "יש לבחור קטגוריית משרה",
+    monthlyHours:
+      positiveError(values.monthlyHours, "היקף שעות חודשי") ??
+      (Number(values.monthlyHours) > MAX_MONTHLY_HOURS
+        ? `היקף שעות חודשי לא יכול לעלות על ${MAX_MONTHLY_HOURS}`
+        : undefined),
+    maxHourlyRate: positiveError(values.maxHourlyRate, "תעריף מרבי"),
+    durationMonths:
+      positiveError(values.durationMonths, "משך ההתקשרות") ??
+      (values.durationMonths.trim() && !Number.isInteger(Number(values.durationMonths))
+        ? "משך ההתקשרות חייב להיות מספר חודשים שלם"
+        : undefined),
+    // גם ביצירה וגם בעריכה. השוואת מחרוזות "YYYY-MM-DD" בטוחה מבחינת אזור זמן
+    submissionDeadline:
+      values.submissionDeadline && values.submissionDeadline < todayInputValue()
+        ? "המועד האחרון להגשה לא יכול להיות מוקדם מהיום"
+        : undefined,
   });
-
-  return errors;
-}

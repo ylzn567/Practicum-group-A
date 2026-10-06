@@ -1,4 +1,4 @@
-import { sumCriteriaWeights, sumStageWeights } from "../stages/stagesBuilder";
+import { sumCriteriaWeights, sumStageWeights } from "../stages/stageForms";
 import type { Criterion, Stage } from "../../types/stage";
 import type { PositionStatus } from "../../types/position";
 

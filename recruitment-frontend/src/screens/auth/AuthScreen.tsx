@@ -1,74 +1,45 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import {
-  Button,
-  Card,
-  Field,
-  Heading,
-  Input,
-  Text,
-} from "../../design-system/components";
+import { ErrorAlert, InputField } from "../../components/FormFields";
+import { Button, Card, Heading, Text } from "../../design-system/components";
+import { useAction } from "../../hooks/useAction";
+import { useForm } from "../../hooks/useForm";
 import { login, register } from "../../services/auth.service";
 import type { AuthUser } from "../../types/auth";
-import { validateAuthForm } from "./validation";
-import type { AuthFormErrors, AuthFormValues, AuthMode } from "./validation";
+import { EMPTY_AUTH_FORM, validateAuthForm } from "./validation";
+import type { AuthMode } from "./validation";
 import "./AuthScreen.css";
 
-const EMPTY_FORM: AuthFormValues = {
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-};
+const TABS: { mode: AuthMode; label: string }[] = [
+  { mode: "login", label: "כניסה" },
+  { mode: "register", label: "הרשמה" },
+];
 
-type AuthScreenProps = {
-  onAuthenticated: (user: AuthUser) => void;
-};
-
-export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
+export function AuthScreen({ onAuthenticated }: { onAuthenticated: (user: AuthUser) => void }) {
   const [mode, setMode] = useState<AuthMode>("login");
-  const [values, setValues] = useState<AuthFormValues>(EMPTY_FORM);
-  const [errors, setErrors] = useState<AuthFormErrors>({});
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const form = useForm(EMPTY_AUTH_FORM);
+  const action = useAction();
   const isRegister = mode === "register";
 
-  function switchMode(next: AuthMode) {
+  const switchMode = (next: AuthMode) => {
     setMode(next);
-    setValues(EMPTY_FORM);
-    setErrors({});
-    setServerError(null);
-  }
+    form.reset();
+    action.setError(null);
+  };
 
-  function updateField(field: keyof AuthFormValues, value: string) {
-    setValues((prev) => ({ ...prev, [field]: value }));
-    // מנקים את השגיאה של השדה ברגע שמתחילים לתקן אותו
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setServerError(null);
+    if (!form.validate((values) => validateAuthForm(values, mode))) return;
 
-    const validationErrors = validateAuthForm(values, mode);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    setIsSubmitting(true);
-    try {
-      const email = values.email.trim().toLowerCase();
+    const { name, email, password } = form.values;
+    const credentials = { email: email.trim().toLowerCase(), password };
+    action.run(async () => {
       const result = isRegister
-        ? await register({ name: values.name.trim(), email, password: values.password })
-        : await login({ email, password: values.password });
-
+        ? await register({ ...credentials, name: name.trim() })
+        : await login(credentials);
       onAuthenticated(result.user);
-    } catch (err) {
-      setServerError((err as Error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+    });
+  };
 
   return (
     <main className="auth">
@@ -77,103 +48,57 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
           <header className="auth__header">
             <Heading level={1}>מערכת הגיוס</Heading>
             <Text>
-              {isRegister
-                ? "יצירת משתמש חדש לצוות המשרד"
-                : "כניסה למערכת עם פרטי המשתמש שלך"}
+              {isRegister ? "יצירת משתמש חדש לצוות המשרד" : "כניסה למערכת עם פרטי המשתמש שלך"}
             </Text>
           </header>
 
           <div className="auth__tabs" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!isRegister}
-              className={`auth__tab ${!isRegister ? "auth__tab--active" : ""}`}
-              onClick={() => switchMode("login")}
-            >
-              כניסה
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isRegister}
-              className={`auth__tab ${isRegister ? "auth__tab--active" : ""}`}
-              onClick={() => switchMode("register")}
-            >
-              הרשמה
-            </button>
+            {TABS.map((tab) => (
+              <button
+                key={tab.mode}
+                type="button"
+                role="tab"
+                aria-selected={mode === tab.mode}
+                className={`auth__tab ${mode === tab.mode ? "auth__tab--active" : ""}`}
+                onClick={() => switchMode(tab.mode)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit} noValidate>
-            {serverError && (
-              <p className="form-alert" role="alert">
-                {serverError}
-              </p>
-            )}
+            <ErrorAlert message={action.error} />
 
+            {isRegister && <InputField form={form} name="name" label="שם מלא" autoComplete="name" />}
+            <InputField form={form} name="email" label="אימייל" type="email" dir="ltr" autoComplete="email" />
+            <InputField
+              form={form}
+              name="password"
+              label="סיסמה"
+              type="password"
+              autoComplete={isRegister ? "new-password" : "current-password"}
+            />
             {isRegister && (
-              <div className={errors.name ? "form-invalid" : undefined}>
-                <Field label="שם מלא" hint={errors.name}>
-                  <Input
-                    value={values.name}
-                    autoComplete="name"
-                    aria-invalid={Boolean(errors.name)}
-                    onChange={(e) => updateField("name", e.target.value)}
-                  />
-                </Field>
-              </div>
-            )}
-
-            <div className={errors.email ? "form-invalid" : undefined}>
-              <Field label="אימייל" hint={errors.email}>
-                <Input
-                  type="email"
-                  dir="ltr"
-                  value={values.email}
-                  autoComplete="email"
-                  aria-invalid={Boolean(errors.email)}
-                  onChange={(e) => updateField("email", e.target.value)}
-                />
-              </Field>
-            </div>
-
-            <div className={errors.password ? "form-invalid" : undefined}>
-              <Field label="סיסמה" hint={errors.password}>
-                <Input
-                  type="password"
-                  value={values.password}
-                  autoComplete={isRegister ? "new-password" : "current-password"}
-                  aria-invalid={Boolean(errors.password)}
-                  onChange={(e) => updateField("password", e.target.value)}
-                />
-              </Field>
-            </div>
-
-            {isRegister && (
-              <div className={errors.confirmPassword ? "form-invalid" : undefined}>
-                <Field label="אימות סיסמה" hint={errors.confirmPassword}>
-                  <Input
-                    type="password"
-                    value={values.confirmPassword}
-                    autoComplete="new-password"
-                    aria-invalid={Boolean(errors.confirmPassword)}
-                    onChange={(e) => updateField("confirmPassword", e.target.value)}
-                  />
-                </Field>
-              </div>
+              <InputField
+                form={form}
+                name="confirmPassword"
+                label="אימות סיסמה"
+                type="password"
+                autoComplete="new-password"
+              />
             )}
 
             <div className="auth__submit">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "רגע..." : isRegister ? "הרשמה" : "כניסה"}
+              <Button type="submit" disabled={action.isRunning}>
+                {action.isRunning ? "רגע..." : isRegister ? "הרשמה" : "כניסה"}
               </Button>
             </div>
           </form>
 
           {isRegister && (
             <p className="auth__note">
-              משתמש חדש נוצר ללא הרשאות. מנהל המערכת משייך לך פרופיל הרשאות לפני
-              הכניסה הראשונה.
+              משתמש חדש נוצר ללא הרשאות. מנהל המערכת משייך לך פרופיל הרשאות לפני הכניסה הראשונה.
             </p>
           )}
 

@@ -1,46 +1,22 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
 import { JobCategory } from "../types";
-import { Repository } from "../repositories/generic.repository";
+import { criterionFields } from "./criterion.model";
+import { defineEntity } from "./defineEntity";
+import { stageFields } from "./stage.model";
 
-// תבנית קריטריון מוטמעת (מועתקת למשרה חדשה מאותה קטגוריה)
-const criterionTemplateSchema = new Schema(
-  {
-    name: { type: String, required: true },
-    type: { type: String, enum: ["BOOLEAN", "SCORED"], required: true },
-    scoringMethod: { type: String, enum: ["RATIO", "DIRECT"] },
-    targetValue: Number,
-    weightPercent: Number,
-    maxScore: Number,
-    descriptionGuide: String,
-  },
-  { _id: false }
-);
-
-// תבנית שלב מוטמעת
+// התבנית מוטמעת בתוך הקטגוריה ומועתקת למשרה חדשה, ולכן אין לה _id משלה.
+// השדות זהים לשלב ולקריטריון האמיתיים (משותפים), רק בלי ההפניה להורה.
 const stageTemplateSchema = new Schema(
   {
-    name: { type: String, required: true },
-    order: Number,
-    weightPercent: Number,
-    quota: Number,
-    criteria: [criterionTemplateSchema],
+    ...stageFields,
+    criteria: [new Schema(criterionFields, { _id: false })],
   },
   { _id: false }
 );
 
-const jobCategorySchema = new Schema<JobCategory>(
-  {
+export const { Model: JobCategoryModel, repository: jobCategoryRepository } =
+  defineEntity<JobCategory>("JobCategory", {
     name: { type: String, required: true },
     description: String,
     stageTemplates: [stageTemplateSchema],
-  },
-  { timestamps: true }
-);
-
-export const JobCategoryModel = model<JobCategory>(
-  "JobCategory",
-  jobCategorySchema
-);
-export const jobCategoryRepository = new Repository<JobCategory>(
-  JobCategoryModel
-);
+  });

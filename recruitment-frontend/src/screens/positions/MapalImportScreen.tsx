@@ -1,112 +1,73 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ChangeEvent } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Field,
-  Heading,
-  Input,
-  Select,
-  Table,
-  Text,
-} from "../../design-system/components";
-import { getJobCategories } from "../../services/jobCategories.service";
-import {
-  createPositionFromMapal,
-  parseMapalFile,
-} from "../../services/positions.service";
-import type { JobCategory } from "../../types/jobCategory";
+import { ErrorAlert, InputField, SelectField, toOptions } from "../../components/FormFields";
+import { Badge, Button, Card, Field, Heading, Text } from "../../design-system/components";
+import { useAction } from "../../hooks/useAction";
+import { useForm } from "../../hooks/useForm";
+import { useLoad } from "../../hooks/useLoad";
+import { categoriesApi, createPositionFromMapal, parseMapalFile } from "../../services/entities";
 import type { MapalDraft } from "../../types/mapalImport";
 import { POSITION_LEVEL_LABELS } from "../../types/position";
 import type { PositionLevel } from "../../types/position";
-import { CRITERION_TYPE_LABELS, SCORING_METHOD_LABELS } from "../../types/stage";
+import { text } from "../../utils/validation";
+import { CriteriaTable } from "../stages/CriteriaTable";
+import { sumStageWeights } from "../stages/stageForms";
 import { WeightMeter } from "../stages/WeightMeter";
 import "./MapalImportScreen.css";
-
-const LEVELS = Object.keys(POSITION_LEVEL_LABELS) as PositionLevel[];
 
 type MapalImportScreenProps = {
   onCreated: (positionId: string) => void;
   onCancel: () => void;
 };
 
+const LEVEL_OPTIONS = toOptions(POSITION_LEVEL_LABELS);
+
 export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProps) {
-  const [fileName, setFileName] = useState<string | null>(null);
+  // הקטגוריה אופציונלית, ולכן כשל בטעינה שלה לא חוסם את הייבוא
+  const categories = useLoad(() => categoriesApi.getAll().catch(() => []));
+  const parser = useAction();
+  const creator = useAction();
+  const form = useForm({ title: "", level: "", categoryId: "" });
+  const [pickedName, setPickedName] = useState<string | null>(null);
   const [draft, setDraft] = useState<MapalDraft | null>(null);
-  const [title, setTitle] = useState("");
-  const [level, setLevel] = useState<PositionLevel | "">("");
-  const [categoryId, setCategoryId] = useState("");
-  const [categories, setCategories] = useState<JobCategory[]>([]);
-  const [isParsing, setIsParsing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [titleError, setTitleError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // הקטגוריה אופציונלית, ולכן כשל בטעינה לא חוסם את הייבוא
-    getJobCategories()
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, []);
-
-  async function handleFile(event: ChangeEvent<HTMLInputElement>) {
+  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = ""; // מאפשר לבחור שוב את אותו קובץ אחרי תיקון
     if (!file) return;
 
-    setError(null);
     setDraft(null);
-    setFileName(file.name);
-    setIsParsing(true);
-    try {
+    setPickedName(file.name);
+    await parser.run(async () => {
       const parsed = await parseMapalFile(file);
+      form.reset({ title: parsed.title, level: parsed.level ?? "", categoryId: "" });
       setDraft(parsed);
-      setTitle(parsed.title);
-      setLevel(parsed.level ?? "");
-      setCategoryId("");
-      setTitleError(null);
-    } catch (err) {
-      setError((err as Error).message);
-      setFileName(null);
-    } finally {
-      setIsParsing(false);
-    }
-  }
+    });
+  };
 
-  function reset() {
+  const reset = () => {
     setDraft(null);
-    setFileName(null);
-    setError(null);
-  }
+    parser.setError(null);
+    creator.setError(null);
+  };
 
-  async function handleCreate() {
+  const handleCreate = () => {
     if (!draft) return;
-    if (title.trim().length < 2) {
-      setTitleError("יש להזין כותרת למשרה");
-      return;
-    }
+    const isValid = form.validate((values) =>
+      values.title.trim().length < 2 ? { title: "יש להזין כותרת למשרה" } : {}
+    );
+    if (!isValid) return;
 
-    setError(null);
-    setIsCreating(true);
-    try {
+    creator.run(async () => {
       const created = await createPositionFromMapal({
-        title: title.trim(),
-        categoryId: categoryId || undefined,
-        level: level || undefined,
+        title: form.values.title.trim(),
+        categoryId: text(form.values.categoryId),
+        level: text(form.values.level) as PositionLevel | undefined,
         stages: draft.stages,
       });
       onCreated(created._id);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsCreating(false);
-    }
-  }
-
-  const totalWeight = draft
-    ? draft.stages.reduce((sum, stage) => sum + stage.weightPercent, 0)
-    : 0;
+    });
+  };
 
   return (
     <div className="page">
@@ -114,8 +75,8 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
         <div>
           <Heading level={1}>ייבוא מפ״ל מקובץ</Heading>
           <Text>
-            מעלים קובץ Excel של מפ״ל, ובונים ממנו משרה עם שלבים וקריטריונים. קודם
-            מוצגת תצוגה מקדימה, ושום דבר לא נוצר עד שמאשרים.
+            מעלים קובץ Excel של מפ״ל, ובונים ממנו משרה עם שלבים וקריטריונים. קודם מוצגת תצוגה
+            מקדימה, ושום דבר לא נוצר עד שמאשרים.
           </Text>
         </div>
         <Button variant="secondary" onClick={onCancel}>
@@ -123,13 +84,9 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
         </Button>
       </header>
 
-      {error && (
-        <p className="form-alert" role="alert">
-          {error}
-        </p>
-      )}
+      <ErrorAlert message={parser.error ?? creator.error} />
 
-      {!draft && (
+      {!draft ? (
         <Card>
           <Heading level={3}>בחירת קובץ</Heading>
           <Field
@@ -141,23 +98,19 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={handleFile}
-              disabled={isParsing}
+              disabled={parser.isRunning}
             />
           </Field>
-          {isParsing && <Text>מנתח את {fileName}...</Text>}
+          {parser.isRunning && <Text>מנתח את {pickedName}...</Text>}
         </Card>
-      )}
-
-      {draft && (
+      ) : (
         <>
           <div className="import__block">
             <Card>
               <div className="import__file">
-                <Heading level={3}>{fileName}</Heading>
+                <Heading level={3}>{pickedName}</Heading>
                 <Badge tone={draft.format === "recruitment" ? "published" : "pending"}>
-                  {draft.format === "recruitment"
-                    ? "קובץ שיוצא מהמערכת"
-                    : "קובץ מקורי של המשרד"}
+                  {draft.format === "recruitment" ? "קובץ שיוצא מהמערכת" : "קובץ מקורי של המשרד"}
                 </Badge>
               </div>
 
@@ -173,55 +126,26 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
               )}
 
               <div className="import__grid">
-                <div className={titleError ? "form-invalid" : undefined}>
-                  <Field label="כותרת המשרה *" hint={titleError ?? undefined}>
-                    <Input
-                      value={title}
-                      onChange={(e) => {
-                        setTitle(e.target.value);
-                        setTitleError(null);
-                      }}
-                    />
-                  </Field>
-                </div>
-
-                <Field label="רמה">
-                  <Select
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value as PositionLevel | "")}
-                  >
-                    <option value="">ללא רמה</option>
-                    {LEVELS.map((item) => (
-                      <option key={item} value={item}>
-                        {POSITION_LEVEL_LABELS[item]}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-
-                <Field
+                <InputField form={form} name="title" label="כותרת המשרה *" />
+                <SelectField form={form} name="level" label="רמה" placeholder="ללא רמה" options={LEVEL_OPTIONS} />
+                <SelectField
+                  form={form}
+                  name="categoryId"
                   label="קטגוריה"
                   hint="לא חובה. הקטגוריה לא מעתיקה תבנית, כי המבנה בא מהקובץ."
-                >
-                  <Select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                  >
-                    <option value="">ללא קטגוריה</option>
-                    {categories.map((category) => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
+                  placeholder="ללא קטגוריה"
+                  options={(categories.data ?? []).map((category) => ({
+                    value: category._id,
+                    label: category.name,
+                  }))}
+                />
               </div>
             </Card>
           </div>
 
           <div className="import__block">
             <Card>
-              <WeightMeter total={totalWeight} label="סכום משקלי השלבים" />
+              <WeightMeter total={sumStageWeights(draft.stages)} label="סכום משקלי השלבים" />
             </Card>
           </div>
 
@@ -237,57 +161,19 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
                   </Badge>
                   <Badge tone="draft">{stage.criteria.length} קריטריונים</Badge>
                 </div>
-
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>קריטריון</th>
-                      <th>סוג</th>
-                      <th>שיטה</th>
-                      <th>יעד / מקסימום</th>
-                      <th>משקל</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stage.criteria.map((criterion, index) => (
-                      <tr key={`${index}-${criterion.name}`}>
-                        <td>{criterion.name}</td>
-                        <td>
-                          <Badge
-                            tone={criterion.type === "BOOLEAN" ? "pending" : "published"}
-                          >
-                            {CRITERION_TYPE_LABELS[criterion.type]}
-                          </Badge>
-                        </td>
-                        <td>
-                          {criterion.scoringMethod
-                            ? SCORING_METHOD_LABELS[criterion.scoringMethod]
-                            : "—"}
-                        </td>
-                        <td className="num">
-                          {criterion.targetValue ?? criterion.maxScore ?? "—"}
-                        </td>
-                        <td className="num">
-                          {criterion.weightPercent != null
-                            ? `${criterion.weightPercent}%`
-                            : "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                <CriteriaTable criteria={stage.criteria} />
               </Card>
             </div>
           ))}
 
-          <div className="import__actions">
-            <Button onClick={handleCreate} disabled={isCreating}>
-              {isCreating ? "יוצר..." : "יצירת המשרה"}
+          <div className="page__actions">
+            <Button onClick={handleCreate} disabled={creator.isRunning}>
+              {creator.isRunning ? "יוצר..." : "יצירת המשרה"}
             </Button>
-            <Button variant="secondary" onClick={reset} disabled={isCreating}>
+            <Button variant="secondary" onClick={reset} disabled={creator.isRunning}>
               בחירת קובץ אחר
             </Button>
-            <Button variant="secondary" onClick={onCancel} disabled={isCreating}>
+            <Button variant="secondary" onClick={onCancel} disabled={creator.isRunning}>
               ביטול
             </Button>
           </div>

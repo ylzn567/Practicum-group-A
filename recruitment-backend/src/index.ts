@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import apiRoutes from "./routes";
+import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();
 
@@ -14,11 +15,12 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("Recruitment Backend API is running");
 });
 
 app.use("/api", apiRoutes);
+app.use(errorHandler); // חייב להיות אחרון
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

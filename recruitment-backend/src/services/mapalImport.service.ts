@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { positionRepository } from "../models/position.model";
 import { StageModel } from "../models/stage.model";
 import { CriterionModel } from "../models/criterion.model";
+import { BadRequestError } from "../middleware/errorHandler";
 import { deletePositionCascade } from "./position.service";
 import { Position, PositionLevel } from "../types";
 
@@ -15,8 +16,6 @@ import { Position, PositionLevel } from "../types";
  *   "office"      — קבצי המפ"ל המקוריים של המשרד. אין בהם שלבים מלבד שלושה משקלים
  *                   (ראיון / מבחן / עלות), ולכן השיוך הוא היוריסטי ומלווה באזהרות.
  */
-
-export class ImportError extends Error {}
 
 export interface DraftCriterion {
   name: string;
@@ -138,7 +137,7 @@ function analyzeCandidatesSheet(sheet: ExcelJS.Worksheet): SheetInfo {
     });
   }
   if (headerRow === -1) {
-    throw new ImportError(
+    throw new BadRequestError(
       'לא נמצאה שורת כותרות. הקובץ צריך לכלול עמודה בשם "שם מועמד" בגיליון הראשון.'
     );
   }
@@ -246,25 +245,25 @@ export async function parseMapalFile(
 ): Promise<MapalDraft> {
   // xlsx הוא ארכיון zip, וכל zip מתחיל ב-"PK"
   if (!Buffer.isBuffer(buffer) || buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
-    throw new ImportError("הקובץ אינו קובץ Excel בפורמט xlsx. קבצי xls ישנים יש לשמור מחדש כ-xlsx.");
+    throw new BadRequestError("הקובץ אינו קובץ Excel בפורמט xlsx. קבצי xls ישנים יש לשמור מחדש כ-xlsx.");
   }
 
   const workbook = new ExcelJS.Workbook();
   try {
     await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
   } catch {
-    throw new ImportError("לא הצלחנו לקרוא את הקובץ. ייתכן שהוא פגום.");
+    throw new BadRequestError("לא הצלחנו לקרוא את הקובץ. ייתכן שהוא פגום.");
   }
 
   const sheet = workbook.getWorksheet("מועמדים") ?? workbook.worksheets[0];
-  if (!sheet) throw new ImportError("בקובץ אין גיליונות.");
+  if (!sheet) throw new BadRequestError("בקובץ אין גיליונות.");
 
   const info = analyzeCandidatesSheet(sheet);
   const sheet2 = analyzeInterviewSheet(workbook);
   const warnings: string[] = [];
 
   if (info.thresholds.length === 0 && info.scored.length === 0) {
-    throw new ImportError(
+    throw new BadRequestError(
       'לא נמצאו עמודות תנאי סף או ציון. הכותרות צריכות להתחיל ב-"תנאי סף" או ב-"ציון:".'
     );
   }
@@ -410,7 +409,7 @@ export async function parseMapalFile(
   }
 
   if (stages.length === 0) {
-    throw new ImportError("לא נמצא בקובץ אף שלב או קריטריון לייבוא.");
+    throw new BadRequestError("לא נמצא בקובץ אף שלב או קריטריון לייבוא.");
   }
 
   stages.forEach((stage, index) => {
@@ -463,7 +462,7 @@ export interface ImportRequest {
 
 function assertString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new ImportError(`יש להזין ${label}`);
+    throw new BadRequestError(`יש להזין ${label}`);
   }
   return value.trim();
 }
@@ -471,7 +470,7 @@ function assertString(value: unknown, label: string): string {
 function optionalNumber(value: unknown, label: string): number | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new ImportError(`${label} חייב להיות מספר`);
+    throw new BadRequestError(`${label} חייב להיות מספר`);
   }
   return value;
 }
@@ -481,17 +480,17 @@ export async function createPositionFromDraft(
 ): Promise<Position> {
   const title = assertString(input?.title, "כותרת המשרה");
   if (!Array.isArray(input.stages) || input.stages.length === 0) {
-    throw new ImportError("אין שלבים ליצירה");
+    throw new BadRequestError("אין שלבים ליצירה");
   }
   if (input.stages.length > MAX_STAGES) {
-    throw new ImportError(`מספר השלבים חורג מ-${MAX_STAGES}`);
+    throw new BadRequestError(`מספר השלבים חורג מ-${MAX_STAGES}`);
   }
 
   // ולידציה מלאה לפני שנוגעים במסד, כדי שרוב הכשלים לא ידרשו rollback
   const stages = input.stages.map((stage, index) => {
     const name = assertString(stage.name, `שם שלב ${index + 1}`);
     if (!Array.isArray(stage.criteria) || stage.criteria.length > MAX_CRITERIA_PER_STAGE) {
-      throw new ImportError(`רשימת הקריטריונים בשלב "${name}" לא תקינה`);
+      throw new BadRequestError(`רשימת הקריטריונים בשלב "${name}" לא תקינה`);
     }
     return {
       name,
@@ -500,17 +499,17 @@ export async function createPositionFromDraft(
       quota: optionalNumber(stage.quota, `מכסת השלב "${name}"`),
       criteria: stage.criteria.map((criterion) => {
         if (!criterion || typeof criterion !== "object") {
-          throw new ImportError(`קריטריון לא תקין בשלב "${name}"`);
+          throw new BadRequestError(`קריטריון לא תקין בשלב "${name}"`);
         }
         if (criterion.type !== "BOOLEAN" && criterion.type !== "SCORED") {
-          throw new ImportError(`סוג קריטריון לא תקין בשלב "${name}"`);
+          throw new BadRequestError(`סוג קריטריון לא תקין בשלב "${name}"`);
         }
         if (
           criterion.scoringMethod !== undefined &&
           criterion.scoringMethod !== "RATIO" &&
           criterion.scoringMethod !== "DIRECT"
         ) {
-          throw new ImportError(`שיטת ניקוד לא תקינה בשלב "${name}"`);
+          throw new BadRequestError(`שיטת ניקוד לא תקינה בשלב "${name}"`);
         }
         return {
         name: assertString(criterion.name, `שם קריטריון בשלב "${name}"`),
@@ -527,7 +526,7 @@ export async function createPositionFromDraft(
   });
 
   if (input.categoryId && !Types.ObjectId.isValid(input.categoryId)) {
-    throw new ImportError("קטגוריית המשרה לא תקינה");
+    throw new BadRequestError("קטגוריית המשרה לא תקינה");
   }
 
   const position = await positionRepository.add({

@@ -1,26 +1,10 @@
-import type { CriterionType, ScoringMethod } from "./stage";
+import type { Criterion, Stage } from "./stage";
 
-/**
- * תבנית קטגוריה — שלבים וקריטריונים מוטמעים בתוך מסמך אחד.
- * בניגוד ל-Stage ו-Criterion, שהם אוספים נפרדים ברמת המשרה.
- */
-export interface CriterionTemplate {
-  name: string;
-  type: CriterionType;
-  scoringMethod?: ScoringMethod;
-  targetValue?: number;
-  weightPercent?: number;
-  maxScore?: number;
-  descriptionGuide?: string;
-}
-
-export interface StageTemplate {
-  name: string;
-  order?: number;
-  weightPercent?: number;
-  quota?: number;
+/** תבנית מוטמעת בקטגוריה: אותם שדות כמו הישות האמיתית, בלי מזהים ובלי הפניה להורה */
+export type CriterionTemplate = Omit<Criterion, "_id" | "stageId">;
+export type StageTemplate = Omit<Stage, "_id" | "positionId"> & {
   criteria?: CriterionTemplate[];
-}
+};
 
 export interface JobCategory {
   _id: string;

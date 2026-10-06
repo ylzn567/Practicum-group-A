@@ -25,25 +25,6 @@ export interface Position {
   createdBy?: Types.ObjectId; // ref: User (קבוצה ג׳)
 }
 
-// שלב + קריטריון לדוגמה שמוטמעים בתוך קטגוריית משרה (תבנית)
-export interface CriterionTemplate {
-  name: string;
-  type: CriterionType;
-  scoringMethod?: ScoringMethod;
-  targetValue?: number;
-  weightPercent?: number;
-  maxScore?: number;
-  descriptionGuide?: string;
-}
-
-export interface StageTemplate {
-  name: string;
-  order?: number;
-  weightPercent?: number;
-  quota?: number;
-  criteria?: CriterionTemplate[];
-}
-
 export interface JobCategory {
   name: string;
   description?: string;
@@ -70,6 +51,12 @@ export interface Criterion {
   weightPercent?: number;
   maxScore?: number;
   descriptionGuide?: string;
+}
+
+// תבנית שלב וקריטריון מוטמעים בקטגוריה: אותם שדות כמו הישות האמיתית, בלי ההפניה להורה
+export type CriterionTemplate = Omit<Criterion, "stageId">;
+export interface StageTemplate extends Omit<Stage, "positionId"> {
+  criteria?: CriterionTemplate[];
 }
 
 export interface Company {

@@ -2,12 +2,6 @@
   margin-bottom: 16px;
 }
 
-.category__actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .category__stage-header {
   display: flex;
   align-items: center;
@@ -15,12 +9,6 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
-}
-
-.category__stage-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 0 16px;
 }
 
 .category__criteria {
@@ -46,12 +34,6 @@
   background: var(--rf-paper);
 }
 
-.category__criterion-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0 16px;
-}
-
 .category__problems {
   font-family: var(--rf-font-body);
   font-size: 14px;
@@ -69,17 +51,4 @@
 
 .category__problems li {
   margin-bottom: 3px;
-}
-
-@media (max-width: 900px) {
-  .category__criterion-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .category__stage-grid,
-  .category__criterion-grid {
-    grid-template-columns: 1fr;
-  }
 }

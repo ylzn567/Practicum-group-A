@@ -1,55 +1,34 @@
+import { toFormValues } from "../../hooks/useForm";
+import type { FormErrors } from "../../hooks/useForm";
 import type { Company } from "../../types/company";
+import { EMAIL_PATTERN, onlyErrors, text } from "../../utils/validation";
 
-export interface CompanyFormValues {
+export interface CompanyFormValues extends Record<string, string> {
   name: string;
   companyIdNumber: string;
   contactEmail: string;
 }
 
-export type CompanyFormErrors = Partial<Record<keyof CompanyFormValues, string>>;
+export const EMPTY_COMPANY_FORM: CompanyFormValues = { name: "", companyIdNumber: "", contactEmail: "" };
 
-export const EMPTY_COMPANY_FORM: CompanyFormValues = {
-  name: "",
-  companyIdNumber: "",
-  contactEmail: "",
-};
+export const companyToForm = (company: Company) => toFormValues(EMPTY_COMPANY_FORM, company);
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const COMPANY_ID_PATTERN = /^\d{9}$/;
+// ח.פ. בישראל הוא בן 9 ספרות. ח.פ. ואימייל אופציונליים.
+export const validateCompanyForm = (values: CompanyFormValues): FormErrors<CompanyFormValues> =>
+  onlyErrors({
+    name: values.name.trim().length < 2 ? "יש להזין שם חברה" : undefined,
+    companyIdNumber:
+      values.companyIdNumber.trim() && !/^\d{9}$/.test(values.companyIdNumber.trim())
+        ? "מספר ח.פ. חייב להיות 9 ספרות"
+        : undefined,
+    contactEmail:
+      values.contactEmail.trim() && !EMAIL_PATTERN.test(values.contactEmail.trim())
+        ? "כתובת האימייל אינה תקינה"
+        : undefined,
+  });
 
-export function companyToForm(company: Company): CompanyFormValues {
-  return {
-    name: company.name ?? "",
-    companyIdNumber: company.companyIdNumber ?? "",
-    contactEmail: company.contactEmail ?? "",
-  };
-}
-
-export function validateCompanyForm(values: CompanyFormValues): CompanyFormErrors {
-  const errors: CompanyFormErrors = {};
-
-  if (values.name.trim().length < 2) {
-    errors.name = "יש להזין שם חברה";
-  }
-
-  // ח.פ. בישראל הוא בן 9 ספרות. השדה עצמו אופציונלי.
-  if (values.companyIdNumber.trim() && !COMPANY_ID_PATTERN.test(values.companyIdNumber.trim())) {
-    errors.companyIdNumber = "מספר ח.פ. חייב להיות 9 ספרות";
-  }
-
-  if (values.contactEmail.trim() && !EMAIL_PATTERN.test(values.contactEmail.trim())) {
-    errors.contactEmail = "כתובת האימייל אינה תקינה";
-  }
-
-  return errors;
-}
-
-export function companyToPayload(values: CompanyFormValues): Partial<Company> {
-  const text = (value: string) => (value.trim() ? value.trim() : undefined);
-
-  return {
-    name: values.name.trim(),
-    companyIdNumber: text(values.companyIdNumber),
-    contactEmail: text(values.contactEmail)?.toLowerCase(),
-  };
-}
+export const companyToPayload = (values: CompanyFormValues): Partial<Company> => ({
+  name: values.name.trim(),
+  companyIdNumber: text(values.companyIdNumber),
+  contactEmail: text(values.contactEmail)?.toLowerCase(),
+});
