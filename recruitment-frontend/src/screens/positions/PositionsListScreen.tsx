@@ -31,11 +31,13 @@ const STATUS_ORDER: PositionStatus[] = [
 type PositionsListScreenProps = {
   onOpenPosition: (positionId: string) => void;
   onCreatePosition: () => void;
+  onImportMapal: () => void;
 };
 
 export function PositionsListScreen({
   onOpenPosition,
   onCreatePosition,
+  onImportMapal,
 }: PositionsListScreenProps) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [categories, setCategories] = useState<JobCategory[]>([]);
@@ -107,7 +109,12 @@ export function PositionsListScreen({
           <Heading level={1}>משרות</Heading>
           <Text>כל המשרות במערכת — מטיוטה ועד סגירת התהליך.</Text>
         </div>
-        <Button onClick={onCreatePosition}>משרה חדשה</Button>
+        <div className="page__actions">
+          <Button onClick={onCreatePosition}>משרה חדשה</Button>
+          <Button variant="secondary" onClick={onImportMapal}>
+            ייבוא מפ״ל
+          </Button>
+        </div>
       </header>
 
       <div className="positions__filters">

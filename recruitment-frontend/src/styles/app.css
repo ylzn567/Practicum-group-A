@@ -94,3 +94,9 @@ body {
   color: var(--rf-primary-ink);
   background: color-mix(in srgb, var(--rf-primary) 14%, transparent);
 }
+
+.page__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

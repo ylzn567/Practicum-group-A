@@ -19,3 +19,9 @@ export function formatDate(value?: string): string {
 export function formatText(value?: string): string {
   return value?.trim() ? value : EMPTY;
 }
+
+/** שם קובץ בטוח ל-Windows: "/" בכותרת כמו "מהנדס/ת" לא חוקי בשם קובץ */
+export function toFileName(prefix: string, title: string, extension: string): string {
+  const cleaned = title.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim();
+  return `${prefix} ${cleaned || "משרה"}.${extension}`;
+}

@@ -7,7 +7,11 @@ import {
   Table,
   Text,
 } from "../../design-system/components";
-import { getPositionById, updatePosition } from "../../services/positions.service";
+import {
+  downloadMapal,
+  getPositionById,
+  updatePosition,
+} from "../../services/positions.service";
 import { getJobCategories } from "../../services/jobCategories.service";
 import { getCriteriaByStage, getStagesByPosition } from "../../services/stages.service";
 import {
@@ -17,7 +21,7 @@ import {
 } from "../../types/position";
 import type { Position } from "../../types/position";
 import type { Criterion, Stage } from "../../types/stage";
-import { formatCurrency, formatDate, formatText } from "../../utils/format";
+import { formatCurrency, formatDate, formatText, toFileName } from "../../utils/format";
 import { sumCriteriaWeights } from "../stages/stagesBuilder";
 import {
   STATUS_FLOW_ORDER,
@@ -48,6 +52,7 @@ export function PositionDetailScreen({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -138,6 +143,19 @@ export function PositionDetailScreen({
     }
   }
 
+  async function handleExportMapal() {
+    if (!position) return;
+    setActionError(null);
+    setIsExporting(true);
+    try {
+      await downloadMapal(positionId, toFileName("מפל", position.title, "xlsx"));
+    } catch (err) {
+      setActionError((err as Error).message);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   const details: { label: string; value: string }[] = [
     { label: "קטגוריה", value: formatText(categoryName) },
     {
@@ -172,6 +190,18 @@ export function PositionDetailScreen({
         </div>
         <div className="detail__actions">
           <Button onClick={onOpenStages}>שלבים וקריטריונים</Button>
+          <Button
+            variant="secondary"
+            onClick={handleExportMapal}
+            disabled={isExporting || stages.length === 0}
+            title={
+              stages.length === 0
+                ? "אין שלבים במשרה, ולכן אין מה לייצא"
+                : "הורדת קובץ מפ״ל (Excel) של המשרה"
+            }
+          >
+            {isExporting ? "מייצא..." : "ייצוא מפ״ל"}
+          </Button>
           <Button variant="secondary" onClick={onEdit}>
             עריכת המשרה
           </Button>

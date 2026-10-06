@@ -14,6 +14,7 @@ import { AuthScreen } from "./screens/auth/AuthScreen";
 import { PositionsListScreen } from "./screens/positions/PositionsListScreen";
 import { PositionFormScreen } from "./screens/positions/PositionFormScreen";
 import { PositionDetailScreen } from "./screens/positions/PositionDetailScreen";
+import { MapalImportScreen } from "./screens/positions/MapalImportScreen";
 import { StagesBuilderScreen } from "./screens/stages/StagesBuilderScreen";
 import { CategoriesListScreen } from "./screens/categories/CategoriesListScreen";
 import { CategoryEditorScreen } from "./screens/categories/CategoryEditorScreen";
@@ -43,6 +44,17 @@ function PositionsRoute() {
     <PositionsListScreen
       onOpenPosition={(id) => navigate(`/positions/${id}`)}
       onCreatePosition={() => navigate("/positions/new")}
+      onImportMapal={() => navigate("/positions/import")}
+    />
+  );
+}
+
+function MapalImportRoute() {
+  const navigate = useNavigate();
+  return (
+    <MapalImportScreen
+      onCreated={(id) => navigate(`/positions/${id}`)}
+      onCancel={() => navigate("/positions")}
     />
   );
 }
@@ -215,6 +227,7 @@ export default function App() {
                 <Route path="/" element={<Navigate to="/positions" replace />} />
                 <Route path="/positions" element={<PositionsRoute />} />
                 <Route path="/positions/new" element={<PositionCreateRoute />} />
+                <Route path="/positions/import" element={<MapalImportRoute />} />
                 <Route
                   path="/positions/:positionId"
                   element={<PositionDetailRoute />}
