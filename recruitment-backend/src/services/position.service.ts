@@ -60,6 +60,9 @@ export async function copyTemplateToPosition(
 export async function createPositionWithTemplate(
   data: Partial<Position>
 ): Promise<{ position: Position; copied: TemplateCopyResult }> {
+  if (data.monthlyHours !== undefined && data.monthlyHours > 182) {
+    throw new Error("היקף שעות חודשי לא יכול לעלות על 182");
+  }
   const position = await positionRepository.add(data);
   const empty: TemplateCopyResult = { stagesCreated: 0, criteriaCreated: 0 };
 

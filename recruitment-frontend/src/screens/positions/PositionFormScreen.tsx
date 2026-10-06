@@ -32,7 +32,7 @@ import {
 import type { PositionFormErrors, PositionFormValues } from "./positionForm";
 import "./PositionFormScreen.css";
 
-const LEVELS: PositionLevel[] = ["LEVEL_A", "LEVEL_C", "LEVEL_D"];
+const LEVELS: PositionLevel[] = ["LEVEL_A", "LEVEL_B", "LEVEL_C", "LEVEL_D"];
 const STATUSES: PositionStatus[] = [
   "DRAFT",
   "IN_EVALUATION",
@@ -243,10 +243,11 @@ export function PositionFormScreen({
             </Field>
 
             <div className={errors.monthlyHours ? "form-invalid" : undefined}>
-              <Field label="היקף שעות חודשי" hint={errors.monthlyHours}>
+              <Field label="היקף שעות חודשי" hint={errors.monthlyHours ?? "עד 182 שעות חודשיות"}>
                 <Input
                   type="number"
                   min="1"
+                  max="182"
                   value={values.monthlyHours}
                   aria-invalid={Boolean(errors.monthlyHours)}
                   onChange={(e) => updateField("monthlyHours", e.target.value)}

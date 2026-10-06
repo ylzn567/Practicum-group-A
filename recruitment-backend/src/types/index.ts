@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 
 // ===== קבוצה א׳: Position · JobCategory · Stage · Criterion · Company =====
 
-export type PositionLevel = "LEVEL_A" | "LEVEL_C" | "LEVEL_D";
+export type PositionLevel = "LEVEL_A" | "LEVEL_B" | "LEVEL_C" | "LEVEL_D";
 
 export type PositionStatus =
   | "DRAFT"

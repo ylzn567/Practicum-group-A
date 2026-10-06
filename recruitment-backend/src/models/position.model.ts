@@ -8,9 +8,12 @@ const positionSchema = new Schema<Position>(
     categoryId: { type: Schema.Types.ObjectId, ref: "JobCategory" },
     clusterCode: String,
     roleCode: String,
-    level: { type: String, enum: ["LEVEL_A", "LEVEL_C", "LEVEL_D"] },
+    level: { type: String, enum: ["LEVEL_A", "LEVEL_B", "LEVEL_C", "LEVEL_D"] },
     description: String,
-    monthlyHours: Number,
+    monthlyHours: {
+      type: Number,
+      max: [182, "היקף שעות חודשי לא יכול לעלות על 182"],
+    },
     maxHourlyRate: Number,
     durationMonths: Number,
     status: {

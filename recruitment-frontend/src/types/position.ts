@@ -1,6 +1,6 @@
 // תואם ל-types/index.ts של הבאקאנד (קבוצה א׳), עם _id ותאריכים כמחרוזות JSON
 
-export type PositionLevel = "LEVEL_A" | "LEVEL_C" | "LEVEL_D";
+export type PositionLevel = "LEVEL_A" | "LEVEL_B" | "LEVEL_C" | "LEVEL_D";
 
 export type PositionStatus =
   | "DRAFT"
@@ -46,6 +46,7 @@ export const POSITION_STATUS_TONES: Record<
 
 export const POSITION_LEVEL_LABELS: Record<PositionLevel, string> = {
   LEVEL_A: "רמה א׳",
+  LEVEL_B: "רמה ב׳",
   LEVEL_C: "רמה ג׳",
   LEVEL_D: "רמה ד׳",
 };

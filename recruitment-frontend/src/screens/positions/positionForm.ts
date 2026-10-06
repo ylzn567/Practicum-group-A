@@ -107,7 +107,13 @@ export function validatePositionForm(
     errors.categoryId = "יש לבחור קטגוריית משרה";
   }
 
-  errors.monthlyHours = validatePositiveNumber(values.monthlyHours, "היקף שעות חודשי");
+  const hoursErr = validatePositiveNumber(values.monthlyHours, "היקף שעות חודשי");
+  if (hoursErr) {
+    errors.monthlyHours = hoursErr;
+  } else if (values.monthlyHours.trim() && Number(values.monthlyHours) > 182) {
+    errors.monthlyHours = "היקף שעות חודשי לא יכול לעלות על 182";
+  }
+
   errors.maxHourlyRate = validatePositiveNumber(values.maxHourlyRate, "תעריף מרבי");
 
   const duration = validatePositiveNumber(values.durationMonths, "משך ההתקשרות");

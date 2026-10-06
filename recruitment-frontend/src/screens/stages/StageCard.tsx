@@ -90,8 +90,7 @@ export function StageCard({
 
     setServerError(null);
     try {
-      // מוחקים קודם את הקריטריונים כדי לא להשאיר מסמכים יתומים
-      await Promise.all(criteria.map((criterion) => deleteCriterion(criterion._id)));
+      // השרת מוחק את הקריטריונים של השלב יחד איתו, בקריאה אחת
       await deleteStage(stage._id);
       onChanged();
     } catch (err) {

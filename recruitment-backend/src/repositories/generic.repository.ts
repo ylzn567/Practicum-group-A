@@ -26,7 +26,7 @@ export class Repository<T> {
   }
 
   async update(id: string, data: Partial<T>): Promise<T | null> {
-    return this.model.findByIdAndUpdate(id, data, { new: true });
+    return this.model.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }
 
   async remove(id: string): Promise<void> {

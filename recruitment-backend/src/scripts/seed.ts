@@ -287,7 +287,7 @@ const positions: PositionSeed[] = [
     level: "LEVEL_D",
     description:
       "ניהול מטה הפרויקטים של המשרד, בקרת לוחות זמנים ותקציב מול כלל היחידות.",
-    monthlyHours: 186,
+    monthlyHours: 182,
     maxHourlyRate: 295,
     durationMonths: 36,
     status: "APPROVED_FOR_TENDER",
