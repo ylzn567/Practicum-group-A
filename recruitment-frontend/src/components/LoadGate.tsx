@@ -10,6 +10,7 @@ export function LoadGate<T>({
   loadingText,
   errorTitle,
   action,
+  inline,
   children,
 }: {
   load: { data?: T; error: string | null };
@@ -17,29 +18,31 @@ export function LoadGate<T>({
   errorTitle: string;
   /** כפתור בכרטיס השגיאה, למשל "חזרה" או "ניסיון נוסף" */
   action?: { label: string; onClick: () => void };
+  /** כשהרכיב משובץ בתוך מסך אחר: בלי עטיפת עמוד משלו */
+  inline?: boolean;
   children: (data: T) => ReactNode;
 }) {
   if (!load.error && load.data !== undefined) return <>{children(load.data)}</>;
 
-  return (
-    <div className="page">
-      <Card>
-        {load.error ? (
-          <>
-            <Heading level={3}>{errorTitle}</Heading>
-            <Text>{load.error}</Text>
-            {action && (
-              <div className="page__actions" style={{ marginTop: 16 }}>
-                <Button variant="secondary" onClick={action.onClick}>
-                  {action.label}
-                </Button>
-              </div>
-            )}
-          </>
-        ) : (
-          <Text>{loadingText}</Text>
-        )}
-      </Card>
-    </div>
+  const body = (
+    <Card>
+      {load.error ? (
+        <>
+          <Heading level={3}>{errorTitle}</Heading>
+          <Text>{load.error}</Text>
+          {action && (
+            <div className="page__actions" style={{ marginTop: 16 }}>
+              <Button variant="secondary" onClick={action.onClick}>
+                {action.label}
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <Text>{loadingText}</Text>
+      )}
+    </Card>
   );
+
+  return inline ? body : <div className="page">{body}</div>;
 }

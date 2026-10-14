@@ -6,9 +6,13 @@ export type PositionLevel = "LEVEL_A" | "LEVEL_B" | "LEVEL_C" | "LEVEL_D";
 
 export type PositionStatus =
   | "DRAFT"
-  | "IN_EVALUATION"
-  | "APPROVED_FOR_TENDER"
-  | "CLOSED";
+  | "PREPARING_MATERIALS"
+  | "PENDING_COMMITTEE_APPROVAL"
+  | "PUBLISHED"
+  | "IN_REVIEW"
+  | "PENDING_FINAL_APPROVAL"
+  | "CLOSED"
+  | "CANCELLED";
 
 export interface Position {
   title: string;

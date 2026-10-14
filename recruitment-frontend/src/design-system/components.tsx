@@ -57,7 +57,7 @@ export function Button({
 
 // ---------- Status badge ----------
 
-type BadgeTone = "draft" | "pending" | "published" | "success";
+type BadgeTone = "draft" | "pending" | "published" | "success" | "cancelled";
 
 export function Badge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
   return <span className={`rf-badge rf-badge--${tone}`}>{children}</span>;

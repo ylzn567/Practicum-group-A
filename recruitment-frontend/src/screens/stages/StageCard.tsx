@@ -23,11 +23,21 @@ type StageCardProps = {
   criteria: Criterion[];
   isFirst: boolean;
   isLast: boolean;
+  /** המשרה פורסמה: מציגים את השלב בלי פעולות עריכה */
+  readOnly?: boolean;
   onChanged: () => void;
   onMove: (direction: "up" | "down") => void;
 };
 
-export function StageCard({ stage, criteria, isFirst, isLast, onChanged, onMove }: StageCardProps) {
+export function StageCard({
+  stage,
+  criteria,
+  isFirst,
+  isLast,
+  readOnly = false,
+  onChanged,
+  onMove,
+}: StageCardProps) {
   const form = useForm(stageToForm(stage));
   const action = useAction();
   const [isOpen, setIsOpen] = useState(true);
@@ -82,12 +92,16 @@ export function StageCard({ stage, criteria, isFirst, isLast, onChanged, onMove 
               משקל {stage.weightPercent ?? 0}%
             </Badge>
             <Badge tone="draft">{criteria.length} קריטריונים</Badge>
-            <Button variant="secondary" disabled={isFirst} aria-label="הזזה למעלה" onClick={() => onMove("up")}>
-              ↑
-            </Button>
-            <Button variant="secondary" disabled={isLast} aria-label="הזזה למטה" onClick={() => onMove("down")}>
-              ↓
-            </Button>
+            {!readOnly && (
+              <>
+                <Button variant="secondary" disabled={isFirst} aria-label="הזזה למעלה" onClick={() => onMove("up")}>
+                  ↑
+                </Button>
+                <Button variant="secondary" disabled={isLast} aria-label="הזזה למטה" onClick={() => onMove("down")}>
+                  ↓
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -96,15 +110,20 @@ export function StageCard({ stage, criteria, isFirst, isLast, onChanged, onMove 
             <ErrorAlert message={action.error} />
 
             <form onSubmit={handleSave} noValidate>
-              <StageFields form={form} />
-              <div className="page__actions">
-                <Button type="submit" disabled={action.isRunning}>
-                  {action.isRunning ? "שומר..." : "שמירת השלב"}
-                </Button>
-                <Button type="button" variant="danger" onClick={handleDeleteStage}>
-                  מחיקת השלב
-                </Button>
-              </div>
+              {/* fieldset נועל את כל שדות השלב בבת אחת */}
+              <fieldset className="form-fieldset" disabled={readOnly}>
+                <StageFields form={form} />
+              </fieldset>
+              {!readOnly && (
+                <div className="page__actions">
+                  <Button type="submit" disabled={action.isRunning}>
+                    {action.isRunning ? "שומר..." : "שמירת השלב"}
+                  </Button>
+                  <Button type="button" variant="danger" onClick={handleDeleteStage}>
+                    מחיקת השלב
+                  </Button>
+                </div>
+              )}
             </form>
 
             <div className="stage-card__criteria">
@@ -120,7 +139,7 @@ export function StageCard({ stage, criteria, isFirst, isLast, onChanged, onMove 
               ) : (
                 <CriteriaTable
                   criteria={criteria}
-                  actions={(criterion) => (
+                  actions={readOnly ? undefined : (criterion) => (
                     <div className="stage-card__row-actions">
                       <Button variant="secondary" onClick={() => setEditing(criterion._id)}>
                         עריכה
@@ -133,7 +152,7 @@ export function StageCard({ stage, criteria, isFirst, isLast, onChanged, onMove 
                 />
               )}
 
-              {editing === null ? (
+              {readOnly ? null : editing === null ? (
                 <div className="page__actions">
                   <Button variant="secondary" onClick={() => setEditing("new")}>
                     הוספת קריטריון

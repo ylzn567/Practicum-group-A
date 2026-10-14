@@ -4,9 +4,13 @@ export type PositionLevel = "LEVEL_A" | "LEVEL_B" | "LEVEL_C" | "LEVEL_D";
 
 export type PositionStatus =
   | "DRAFT"
-  | "IN_EVALUATION"
-  | "APPROVED_FOR_TENDER"
-  | "CLOSED";
+  | "PREPARING_MATERIALS"
+  | "PENDING_COMMITTEE_APPROVAL"
+  | "PUBLISHED"
+  | "IN_REVIEW"
+  | "PENDING_FINAL_APPROVAL"
+  | "CLOSED"
+  | "CANCELLED";
 
 export interface Position {
   _id: string;
@@ -26,22 +30,31 @@ export interface Position {
   updatedAt?: string;
 }
 
+// לפי סדר חיי התיחור. "בוטלה" מחוץ לרצף (ראו positionWorkflow.ts)
 export const POSITION_STATUS_LABELS: Record<PositionStatus, string> = {
   DRAFT: "טיוטה",
-  IN_EVALUATION: "בהערכה",
-  APPROVED_FOR_TENDER: "אושרה לתיחור",
+  PREPARING_MATERIALS: "הכנת חומרים לוועדה",
+  PENDING_COMMITTEE_APPROVAL: "ממתינה לאישור ועדה",
+  PUBLISHED: "פורסמה לספקים",
+  IN_REVIEW: "בבדיקה ובסינון",
+  PENDING_FINAL_APPROVAL: "ממתינה לאישור סופי",
   CLOSED: "סגורה",
+  CANCELLED: "בוטלה",
 };
 
-// מיפוי לגוני ה-Badge של מערכת העיצוב
+// מיפוי לגוני ה-Badge של מערכת העיצוב: ממתינה = pending, פתוחה לספקים = published
 export const POSITION_STATUS_TONES: Record<
   PositionStatus,
-  "draft" | "pending" | "published" | "success"
+  "draft" | "pending" | "published" | "success" | "cancelled"
 > = {
   DRAFT: "draft",
-  IN_EVALUATION: "pending",
-  APPROVED_FOR_TENDER: "published",
+  PREPARING_MATERIALS: "pending",
+  PENDING_COMMITTEE_APPROVAL: "pending",
+  PUBLISHED: "published",
+  IN_REVIEW: "published",
+  PENDING_FINAL_APPROVAL: "pending",
   CLOSED: "success",
+  CANCELLED: "cancelled",
 };
 
 export const POSITION_LEVEL_LABELS: Record<PositionLevel, string> = {

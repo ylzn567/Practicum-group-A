@@ -23,6 +23,7 @@
   --rf-status-pending: #B9791F;
   --rf-status-published: #1F5FA8;
   --rf-status-success: #2E7D5E;
+  --rf-status-cancelled: #B5453A;
 
   --rf-font-display: "Archivo", "Segoe UI", Arial, sans-serif;
   --rf-font-body: "Source Serif 4", Georgia, serif;
@@ -46,6 +47,7 @@
     --rf-status-pending: #E0AE5C;
     --rf-status-published: #6FA8E0;
     --rf-status-success: #4FAE85;
+    --rf-status-cancelled: #E0796E;
   }
 }
 
@@ -65,4 +67,5 @@
   --rf-status-pending: #E0AE5C;
   --rf-status-published: #6FA8E0;
   --rf-status-success: #4FAE85;
+  --rf-status-cancelled: #E0796E;
 }

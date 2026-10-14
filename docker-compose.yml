@@ -1,0 +1,69 @@
+# מריץ את כל המערכת: מסד נתונים, שרת וממשק.
+#
+#   docker compose up --build                       הפעלה (האתר: http://localhost:8080)
+#   docker compose --profile tools run --rm seed    מילוי נתוני דמו (מוחק את האוספים של קבוצה א׳!)
+#   docker compose down                             עצירה (הנתונים נשמרים)
+#   docker compose down -v                          עצירה ומחיקת הנתונים
+#
+# משתנים אופציונליים (בקובץ .env בשורש, ראו .env.example): FRONTEND_PORT, BACKEND_PORT, MONGO_URI
+
+name: recruitment
+
+x-mongo-uri: &mongo-uri MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/recruitment_db}
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    # המסד לא חשוף החוצה. כדי להתחבר אליו מ-Compass, הוסיפו:  ports: ["27018:27017"]
+
+  backend:
+    build: ./recruitment-backend
+    restart: unless-stopped
+    environment:
+      - PORT=5000
+      - *mongo-uri
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5000/ > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  frontend:
+    build: ./recruitment-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # פעם אחת לפי הצורך, ולא חלק מההפעלה הרגילה (profile בשם tools)
+  seed:
+    profiles: ["tools"]
+    build:
+      context: ./recruitment-backend
+      target: build # שלב הבנייה כולל את ts-node שה-seed צריך
+    command: ["npx", "ts-node", "--transpile-only", "src/scripts/seed.ts", "--reset"]
+    environment:
+      - *mongo-uri
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

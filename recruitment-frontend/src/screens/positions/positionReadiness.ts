@@ -1,6 +1,5 @@
 import { sumCriteriaWeights, sumStageWeights } from "../stages/stageForms";
 import type { Criterion, Stage } from "../../types/stage";
-import type { PositionStatus } from "../../types/position";
 
 export interface ReadinessCheck {
   label: string;
@@ -9,9 +8,9 @@ export interface ReadinessCheck {
 }
 
 /**
- * מה שצריך להיות תקין לפני שמשרה עוברת מטיוטה להערכה.
- * ברגע שמועמדים מתחילים לקבל ציונים, שינוי משקלים ישנה ציונים קיימים —
- * ולכן הבדיקה נעשית כאן, לפני המעבר, ולא אחריו.
+ * מה שצריך להיות תקין לפני ההגשה לוועדה ולפני הפרסום לספקים (requiresReadiness).
+ * מהפרסום השלבים והמשקלים ננעלים, והספקים מגישים לפיהם —
+ * ולכן הבדיקה נעשית לפני המעבר, ולא אחריו.
  */
 export function buildReadinessChecks(
   stages: Stage[],
@@ -59,26 +58,3 @@ export function buildReadinessChecks(
     },
   ];
 }
-
-/**
- * סדר המעברים. שימו לב: המשרד לא הגדיר אילו מעברים מותרים —
- * זו הנחה שלנו שצריכה אישור, ולא כלל שהגיע מהנוהל.
- */
-const STATUS_FLOW: PositionStatus[] = [
-  "DRAFT",
-  "IN_EVALUATION",
-  "APPROVED_FOR_TENDER",
-  "CLOSED",
-];
-
-export function getNextStatus(current: PositionStatus): PositionStatus | null {
-  const index = STATUS_FLOW.indexOf(current);
-  if (index === -1 || index === STATUS_FLOW.length - 1) return null;
-  return STATUS_FLOW[index + 1];
-}
-
-export function getStatusStepIndex(current: PositionStatus): number {
-  return STATUS_FLOW.indexOf(current);
-}
-
-export const STATUS_FLOW_ORDER = STATUS_FLOW;

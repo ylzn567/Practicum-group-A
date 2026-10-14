@@ -8,6 +8,8 @@ export interface GenericRouterOptions<T> {
   populatableFields?: string[];
   /** דורס את היצירה הגנרית, כשיצירה כוללת לוגיקה נוספת */
   create?: (body: Partial<T>) => Promise<T>;
+  /** דורס את העדכון הגנרי, למשל כשמותר לעדכן רק בסטטוסים מסוימים. null = לא נמצא */
+  update?: (id: string, body: Partial<T>) => Promise<T | null>;
   /** דורס את המחיקה הגנרית, למשל מחיקה מדורגת */
   remove?: (id: string) => Promise<unknown>;
 }
@@ -23,6 +25,7 @@ export function createGenericRouter<T>(
     filterableFields = [],
     populatableFields = [],
     create = (body) => repository.add(body),
+    update = (id, body) => repository.update(id, body),
     remove = (id) => repository.remove(id),
   }: GenericRouterOptions<T> = {}
 ): Router {
@@ -56,7 +59,7 @@ export function createGenericRouter<T>(
   });
 
   router.put("/:id", async (req, res) => {
-    const updated = await repository.update(id(req), req.body);
+    const updated = await update(id(req), req.body);
     updated ? res.json(updated) : res.status(404).json(NOT_FOUND);
   });
 

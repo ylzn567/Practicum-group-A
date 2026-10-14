@@ -262,8 +262,8 @@ const positions: PositionSeed[] = [
     monthlyHours: 180,
     maxHourlyRate: 320,
     durationMonths: 24,
-    status: "IN_EVALUATION",
-    submissionDeadline: new Date("2026-10-15"),
+    status: "IN_REVIEW",
+    submissionDeadline: new Date("2026-10-01"),
   },
   {
     title: "מהנדס/ת DevOps ג׳וניור",
@@ -290,8 +290,8 @@ const positions: PositionSeed[] = [
     monthlyHours: 182,
     maxHourlyRate: 295,
     durationMonths: 36,
-    status: "APPROVED_FOR_TENDER",
-    submissionDeadline: new Date("2026-09-30"),
+    status: "PUBLISHED",
+    submissionDeadline: new Date("2026-11-15"),
   },
   {
     title: "מנהל/ת פרויקטי תשתית",
@@ -304,7 +304,7 @@ const positions: PositionSeed[] = [
     monthlyHours: 170,
     maxHourlyRate: 245,
     durationMonths: 18,
-    status: "IN_EVALUATION",
+    status: "PENDING_COMMITTEE_APPROVAL",
     submissionDeadline: new Date("2026-10-22"),
   },
   {

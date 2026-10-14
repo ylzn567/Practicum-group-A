@@ -6,6 +6,7 @@ import { jobCategoryRepository } from "../models/jobCategory.model";
 import { positionRepository } from "../models/position.model";
 import { stageFields, StageModel } from "../models/stage.model";
 import { JobCategory, Position } from "../types";
+import { assertPositionDeletable, assertPositionUpdate } from "./positionWorkflow";
 
 /**
  * לוגיקה עסקית ייחודית, לא CRUD רגיל, ולכן פונקציה משלה
@@ -40,18 +41,37 @@ export async function copyTemplateToPosition(positionId: Types.ObjectId, categor
 /**
  * יצירת משרה + העתקת תבנית הקטגוריה שלה.
  * בלי categoryId, או כשלקטגוריה אין תבנית, המשרה נוצרת ריקה משלבים.
+ * משרה חדשה תמיד מתחילה כטיוטה, ומשם מתקדמת רק לפי מעברי הסטטוס המותרים.
  */
 export async function createPositionWithTemplate(data: Partial<Position>): Promise<Position> {
   if (data.monthlyHours !== undefined && data.monthlyHours > MAX_MONTHLY_HOURS) {
     throw new BadRequestError(`היקף שעות חודשי לא יכול לעלות על ${MAX_MONTHLY_HOURS}`);
   }
-  const position = await positionRepository.add(data);
+  const position = await positionRepository.add({ ...data, status: "DRAFT" });
 
   const category = data.categoryId && (await jobCategoryRepository.getById(String(data.categoryId)));
   if (category) {
     await copyTemplateToPosition((position as Position & { _id: Types.ObjectId })._id, category);
   }
   return position;
+}
+
+/** עדכון משרה, כולל מעבר סטטוס. מה שמותר תלוי בסטטוס הנוכחי (positionWorkflow) */
+export async function updatePosition(
+  positionId: string,
+  changes: Partial<Position>
+): Promise<Position | null> {
+  const current = await positionRepository.getById(positionId);
+  if (!current) return null;
+  assertPositionUpdate(current, changes);
+  return positionRepository.update(positionId, changes);
+}
+
+/** מחיקה מהממשק: רק לפני הפרסום. ממשרה שפורסמה יוצאים בביטול */
+export async function deletePosition(positionId: string): Promise<void> {
+  const current = await positionRepository.getById(positionId);
+  if (current) assertPositionDeletable(current);
+  await deletePositionCascade(positionId);
 }
 
 /** מחיקת משרה + כל השלבים והקריטריונים שלה, כדי לא להשאיר מסמכים יתומים */

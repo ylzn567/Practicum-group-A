@@ -96,11 +96,13 @@ export function SelectField<V extends Record<string, string>>({
   hint,
   options,
   placeholder,
-}: FieldProps<V> & { options: Option[]; placeholder?: string }) {
+  disabled,
+}: FieldProps<V> & { options: Option[]; placeholder?: string; disabled?: boolean }) {
   return (
     <FormField label={label} error={form.errors[name]} hint={hint}>
       <Select
         value={form.values[name]}
+        disabled={disabled}
         aria-invalid={Boolean(form.errors[name])}
         onChange={(e) => form.set(name, e.target.value)}
       >
@@ -117,4 +119,9 @@ export function ErrorAlert({ message }: { message: string | null }) {
       {message}
     </p>
   ) : null;
+}
+
+/** הודעת מידע מעל טופס או מסך, למשל למה שדות נעולים */
+export function Notice({ children }: { children: ReactNode }) {
+  return <p className="form-notice">{children}</p>;
 }

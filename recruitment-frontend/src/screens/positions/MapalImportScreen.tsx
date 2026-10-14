@@ -178,7 +178,7 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
             </Button>
           </div>
           <p className="import__footnote">
-            המשרה תיווצר כטיוטה. אחרי היצירה אפשר לערוך שלבים וקריטריונים בכרטיס המשרה.
+            המשרה תיווצר כטיוטה, ואחרי היצירה תיפתח עריכת המשרה עם השלבים והקריטריונים שיובאו.
           </p>
         </>
       )}

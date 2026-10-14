@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { MAX_MONTHLY_HOURS } from "../constants";
+import { MAX_MONTHLY_HOURS, POSITION_STATUS_LABELS } from "../constants";
 import { Position } from "../types";
 import { defineEntity } from "./defineEntity";
 
@@ -19,7 +19,7 @@ export const { Model: PositionModel, repository: positionRepository } =
     durationMonths: Number,
     status: {
       type: String,
-      enum: ["DRAFT", "IN_EVALUATION", "APPROVED_FOR_TENDER", "CLOSED"],
+      enum: Object.keys(POSITION_STATUS_LABELS),
       default: "DRAFT",
     },
     submissionDeadline: Date,

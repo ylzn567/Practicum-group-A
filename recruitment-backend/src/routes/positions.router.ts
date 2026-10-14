@@ -3,7 +3,11 @@ import { createGenericRouter } from "./generic.router";
 import { positionRepository } from "../models/position.model";
 import { XLSX_MIME, buildMapalWorkbook } from "../services/mapal.service";
 import { createPositionFromDraft, parseMapalFile } from "../services/mapalImport.service";
-import { createPositionWithTemplate, deletePositionCascade } from "../services/position.service";
+import {
+  createPositionWithTemplate,
+  deletePosition,
+  updatePosition,
+} from "../services/position.service";
 
 const router = Router();
 
@@ -46,13 +50,15 @@ router.post("/import-mapal", async (req, res) => {
   res.status(201).json(await createPositionFromDraft(req.body));
 });
 
-// שאר ה-CRUD גנרי. יצירה מעתיקה תבנית קטגוריה, ומחיקה מוחקת גם שלבים וקריטריונים
+// שאר ה-CRUD גנרי. יצירה מעתיקה תבנית קטגוריה, עדכון בודק סטטוס ונעילה,
+// ומחיקה מוחקת גם שלבים וקריטריונים
 router.use(
   createGenericRouter(positionRepository, {
     filterableFields: ["categoryId", "status", "level"],
     populatableFields: ["categoryId", "createdBy"],
     create: createPositionWithTemplate,
-    remove: deletePositionCascade,
+    update: updatePosition,
+    remove: deletePosition,
   })
 );
 

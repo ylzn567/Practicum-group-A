@@ -9,3 +9,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+.position-form__stages {
+  margin-top: 32px;
+}
+
+.position-form__stages > h2 {
+  margin-bottom: 16px;
+}

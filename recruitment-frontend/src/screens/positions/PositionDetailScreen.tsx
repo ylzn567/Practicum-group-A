@@ -1,4 +1,4 @@
-import { ErrorAlert } from "../../components/FormFields";
+import { ErrorAlert, Notice } from "../../components/FormFields";
 import { LoadGate } from "../../components/LoadGate";
 import { Badge, Button, Card, Heading, Table, Text } from "../../design-system/components";
 import { useAction } from "../../hooks/useAction";
@@ -14,15 +14,17 @@ import {
   POSITION_STATUS_LABELS,
   POSITION_STATUS_TONES,
 } from "../../types/position";
-import type { Position } from "../../types/position";
+import type { Position, PositionStatus } from "../../types/position";
 import { formatCurrency, formatDate, formatText, toFileName } from "../../utils/format";
 import { hasScoredCriteria, sumCriteriaWeights } from "../stages/stageForms";
+import { buildReadinessChecks } from "./positionReadiness";
 import {
-  STATUS_FLOW_ORDER,
-  buildReadinessChecks,
-  getNextStatus,
-  getStatusStepIndex,
-} from "./positionReadiness";
+  STATUS_FLOW,
+  getTransitions,
+  isContentLocked,
+  isFinalStatus,
+  requiresReadiness,
+} from "./positionWorkflow";
 import "./PositionDetailScreen.css";
 
 type PositionDetailScreenProps = {
@@ -58,7 +60,7 @@ export function PositionDetailScreen({
     const categoryName = categories.find((category) => category._id === position.categoryId)?.name ?? "";
     return { position, categoryName, ...tree };
   }, [positionId]);
-  const advance = useAction();
+  const transition = useAction();
   const exporter = useAction();
 
   return (
@@ -70,21 +72,38 @@ export function PositionDetailScreen({
     >
       {({ position, categoryName, stages, criteriaByStage }) => {
         const status = position.status ?? "DRAFT";
-        const nextStatus = getNextStatus(status);
-        const currentStep = getStatusStepIndex(status);
+        const { next, back, canCancel } = getTransitions(status);
+        const currentStep = STATUS_FLOW.indexOf(status); // -1 כשהתיחור בוטל
+        const isLocked = isContentLocked(status);
+        const isFinal = isFinalStatus(status);
         const checks = buildReadinessChecks(stages, criteriaByStage);
 
-        // הבדיקות רלוונטיות רק למעבר מטיוטה להערכה
-        const requiresChecks = status === "DRAFT";
+        // הבדיקות חוסמות רק את המעברים שבהם המפ"ל מוגש לוועדה או ננעל בפרסום
         const isReady = checks.every((check) => check.passed);
-        const canAdvance = Boolean(nextStatus) && (!requiresChecks || isReady);
+        const blockedByChecks = next !== null && requiresReadiness(next) && !isReady;
 
-        const handleAdvance = () =>
-          nextStatus &&
-          advance.run(async () => {
-            await positionsApi.update(positionId, { status: nextStatus });
+        const changeStatus = (target: PositionStatus, confirmText: string) =>
+          transition.run(async () => {
+            await positionsApi.update(positionId, { status: target });
             load.reload();
-          }, `להעביר את המשרה לסטטוס "${POSITION_STATUS_LABELS[nextStatus]}"?`);
+          }, confirmText);
+
+        const handleNext = (target: PositionStatus) =>
+          changeStatus(
+            target,
+            target === "PUBLISHED"
+              ? "לפרסם את המשרה לספקים? מרגע הפרסום השדות המהותיים, השלבים והקריטריונים ננעלים לעריכה."
+              : `להעביר את המשרה לסטטוס "${POSITION_STATUS_LABELS[target]}"?`
+          );
+
+        const handleBack = (target: PositionStatus) =>
+          changeStatus(target, `להחזיר את המשרה לסטטוס "${POSITION_STATUS_LABELS[target]}"?`);
+
+        const handleCancel = () =>
+          changeStatus(
+            "CANCELLED",
+            "לבטל את התיחור? אחרי ביטול אי אפשר לערוך את המשרה או להחזיר אותה לתהליך."
+          );
 
         const handleExport = () =>
           exporter.run(() => downloadMapal(positionId, toFileName("מפל", position.title, "xlsx")));
@@ -113,22 +132,24 @@ export function PositionDetailScreen({
                 >
                   {exporter.isRunning ? "מייצא..." : "ייצוא מפ״ל"}
                 </Button>
-                <Button variant="secondary" onClick={onEdit}>
-                  עריכת המשרה
-                </Button>
+                {!isFinal && (
+                  <Button variant="secondary" onClick={onEdit}>
+                    עריכת המשרה
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={onBack}>
                   חזרה לרשימה
                 </Button>
               </div>
             </header>
 
-            <ErrorAlert message={advance.error ?? exporter.error} />
+            <ErrorAlert message={transition.error ?? exporter.error} />
 
             <div className="detail__block">
               <Card>
                 <Heading level={3}>מצב התהליך</Heading>
                 <ol className="status-track">
-                  {STATUS_FLOW_ORDER.map((flowStatus, index) => (
+                  {STATUS_FLOW.map((flowStatus, index) => (
                     <li
                       key={flowStatus}
                       className={`status-track__step ${
@@ -141,25 +162,58 @@ export function PositionDetailScreen({
                   ))}
                 </ol>
 
-                {nextStatus ? (
+                {isLocked && !isFinal && (
+                  <Notice>
+                    המשרה פורסמה, ולכן השדות המהותיים, השלבים והקריטריונים נעולים. אפשר לעדכן רק את
+                    התיאור ואת מועד ההגשה. לתיקון מהותי יש לבטל את התיחור ולפתוח משרה חדשה.
+                  </Notice>
+                )}
+
+                {status === "CANCELLED" ? (
+                  <Text>התיחור בוטל. כדי לגייס לתפקיד יש לפתוח משרה חדשה.</Text>
+                ) : status === "CLOSED" ? (
+                  <Text>הוכרז זוכה, והמשרה סגורה.</Text>
+                ) : (
                   <div className="detail__advance">
-                    <Button onClick={handleAdvance} disabled={!canAdvance || advance.isRunning}>
-                      {advance.isRunning ? "מעדכן..." : `העברה ל"${POSITION_STATUS_LABELS[nextStatus]}"`}
-                    </Button>
-                    {requiresChecks && !isReady && (
-                      <Text>לא ניתן להעביר להערכה עד שכל הבדיקות למטה עוברות.</Text>
+                    {next && (
+                      <Button
+                        onClick={() => handleNext(next)}
+                        disabled={blockedByChecks || transition.isRunning}
+                      >
+                        {transition.isRunning ? "מעדכן..." : `העברה ל"${POSITION_STATUS_LABELS[next]}"`}
+                      </Button>
+                    )}
+                    {back && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleBack(back)}
+                        disabled={transition.isRunning}
+                      >
+                        {`החזרה ל"${POSITION_STATUS_LABELS[back]}"`}
+                      </Button>
+                    )}
+                    {canCancel && (
+                      <Button variant="danger" onClick={handleCancel} disabled={transition.isRunning}>
+                        ביטול התיחור
+                      </Button>
+                    )}
+                    {next && blockedByChecks && (
+                      <Text>
+                        {`לא ניתן להעביר ל"${POSITION_STATUS_LABELS[next]}" עד שכל בדיקות המוכנות למטה עוברות.`}
+                      </Text>
                     )}
                   </div>
-                ) : (
-                  <Text>המשרה בסטטוס הסופי.</Text>
                 )}
               </Card>
             </div>
 
-            {requiresChecks && (
+            {!isLocked && (
               <div className="detail__block">
                 <Card>
-                  <Heading level={3}>מוכנות למעבר להערכה</Heading>
+                  <Heading level={3}>מוכנות להגשה לוועדה ולפרסום</Heading>
+                  <Text>
+                    נדרש לפני ההגשה לוועדה ולפני הפרסום, כי מרגע הפרסום השלבים והמשקלים ננעלים.
+                  </Text>
                   <ul className="checklist">
                     {checks.map((check) => (
                       <li

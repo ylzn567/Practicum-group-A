@@ -84,6 +84,7 @@
 .rf-badge--pending { color: var(--rf-status-pending); background: color-mix(in srgb, var(--rf-status-pending) 18%, transparent); }
 .rf-badge--published { color: var(--rf-status-published); background: color-mix(in srgb, var(--rf-status-published) 16%, transparent); }
 .rf-badge--success { color: var(--rf-status-success); background: color-mix(in srgb, var(--rf-status-success) 16%, transparent); }
+.rf-badge--cancelled { color: var(--rf-status-cancelled); background: color-mix(in srgb, var(--rf-status-cancelled) 14%, transparent); }
 
 .rf-card {
   background: var(--rf-paper-raised);

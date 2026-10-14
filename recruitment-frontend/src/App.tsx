@@ -65,7 +65,7 @@ const ROUTES: AppRoute[] = [
   {
     path: "/positions/import",
     render: (go) => (
-      <MapalImportScreen onCreated={(id) => go(`/positions/${id}`)} onCancel={() => go("/positions")} />
+      <MapalImportScreen onCreated={(id) => go(`/positions/${id}/edit`)} onCancel={() => go("/positions")} />
     ),
   },
   {
@@ -154,7 +154,7 @@ function AppShell({ user, onLogout, children }: { user: AuthUser | null; onLogou
   return (
     <>
       <header className="app-bar">
-        <span className="app-bar__user">{user?.name ?? "מצב פיתוח"}</span>
+        {user && <span className="app-bar__user">{user.name}</span>}
         <nav className="app-bar__nav">
           {NAV_LINKS.map((link) => (
             <NavLink key={link.to} className="app-bar__link" to={link.to}>

@@ -17,7 +17,6 @@ export interface PositionFormValues extends Record<string, string> {
   monthlyHours: string;
   maxHourlyRate: string;
   durationMonths: string;
-  status: string;
   submissionDeadline: string;
 }
 
@@ -31,7 +30,6 @@ export const EMPTY_POSITION_FORM: PositionFormValues = {
   monthlyHours: "",
   maxHourlyRate: "",
   durationMonths: "",
-  status: "DRAFT",
   submissionDeadline: "",
 };
 
@@ -47,7 +45,10 @@ export const positionToForm = (position: Position): PositionFormValues => ({
   submissionDeadline: position.submissionDeadline?.slice(0, 10) ?? "", // החלק של התאריך ב-ISO
 });
 
-/** שדה ריק נשלח כ-undefined ולא כמחרוזת ריקה, אחרת mongoose דוחה אותו מול ה-enum של level ו-status */
+/**
+ * שדה ריק נשלח כ-undefined ולא כמחרוזת ריקה, אחרת mongoose דוחה אותו מול ה-enum של level.
+ * הסטטוס לא חלק מהטופס: הוא משתנה רק במעברים המותרים שבמסך המשרה.
+ */
 export const positionToPayload = (values: PositionFormValues): Partial<Position> => ({
   title: values.title.trim(),
   categoryId: text(values.categoryId),
@@ -58,15 +59,21 @@ export const positionToPayload = (values: PositionFormValues): Partial<Position>
   monthlyHours: num(values.monthlyHours),
   maxHourlyRate: num(values.maxHourlyRate),
   durationMonths: num(values.durationMonths),
-  status: text(values.status) as Position["status"],
   submissionDeadline: text(values.submissionDeadline),
 });
 
-export const validatePositionForm = (values: PositionFormValues): FormErrors<PositionFormValues> =>
+/**
+ * initial: הערכים שלפני העריכה, ורק בעריכה.
+ * קטגוריה חובה רק ביצירה, כי היא קובעת איזו תבנית מועתקת (משרה מיובאת נוצרת בלעדיה).
+ * מועד הגשה שעבר נחסם רק אם שינו אותו, כי במשרה שכבר בבדיקה המועד עבר מטבע הדברים.
+ */
+export const validatePositionForm = (
+  values: PositionFormValues,
+  initial?: PositionFormValues
+): FormErrors<PositionFormValues> =>
   onlyErrors({
     title: values.title.trim().length < 2 ? "יש להזין כותרת למשרה" : undefined,
-    // הקטגוריה קובעת את תבנית השלבים והקריטריונים, ולכן חובה
-    categoryId: values.categoryId ? undefined : "יש לבחור קטגוריית משרה",
+    categoryId: !initial && !values.categoryId ? "יש לבחור קטגוריית משרה" : undefined,
     monthlyHours:
       positiveError(values.monthlyHours, "היקף שעות חודשי") ??
       (Number(values.monthlyHours) > MAX_MONTHLY_HOURS
@@ -78,9 +85,11 @@ export const validatePositionForm = (values: PositionFormValues): FormErrors<Pos
       (values.durationMonths.trim() && !Number.isInteger(Number(values.durationMonths))
         ? "משך ההתקשרות חייב להיות מספר חודשים שלם"
         : undefined),
-    // גם ביצירה וגם בעריכה. השוואת מחרוזות "YYYY-MM-DD" בטוחה מבחינת אזור זמן
+    // השוואת מחרוזות "YYYY-MM-DD" בטוחה מבחינת אזור זמן
     submissionDeadline:
-      values.submissionDeadline && values.submissionDeadline < todayInputValue()
+      values.submissionDeadline &&
+      values.submissionDeadline !== initial?.submissionDeadline &&
+      values.submissionDeadline < todayInputValue()
         ? "המועד האחרון להגשה לא יכול להיות מוקדם מהיום"
         : undefined,
   });
