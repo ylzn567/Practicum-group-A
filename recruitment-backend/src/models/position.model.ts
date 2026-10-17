@@ -1,9 +1,10 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { MAX_MONTHLY_HOURS, POSITION_STATUS_LABELS } from "../constants";
 import { Position } from "../types";
-import { Repository } from "../repositories/generic.repository";
+import { defineEntity } from "./defineEntity";
 
-const positionSchema = new Schema<Position>(
-  {
+export const { Model: PositionModel, repository: positionRepository } =
+  defineEntity<Position>("Position", {
     title: { type: String, required: true },
     categoryId: { type: Schema.Types.ObjectId, ref: "JobCategory" },
     clusterCode: String,
@@ -12,20 +13,15 @@ const positionSchema = new Schema<Position>(
     description: String,
     monthlyHours: {
       type: Number,
-      max: [182, "היקף שעות חודשי לא יכול לעלות על 182"],
+      max: [MAX_MONTHLY_HOURS, `היקף שעות חודשי לא יכול לעלות על ${MAX_MONTHLY_HOURS}`],
     },
     maxHourlyRate: Number,
     durationMonths: Number,
     status: {
       type: String,
-      enum: ["DRAFT", "IN_EVALUATION", "APPROVED_FOR_TENDER", "CLOSED"],
+      enum: Object.keys(POSITION_STATUS_LABELS),
       default: "DRAFT",
     },
     submissionDeadline: Date,
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
-  },
-  { timestamps: true }
-);
-
-export const PositionModel = model<Position>("Position", positionSchema);
-export const positionRepository = new Repository<Position>(PositionModel);
+  });

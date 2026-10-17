@@ -1,27 +1,40 @@
 import { Router } from "express";
 import { createGenericRouter } from "./generic.router";
 import positionsRouter from "./positions.router";
-import stagesRouter from "./stages.router";
 
 import { jobCategoryRepository } from "../models/jobCategory.model";
+import { stageRepository } from "../models/stage.model";
 import { criterionRepository } from "../models/criterion.model";
 import { companyRepository } from "../models/company.model";
+import { createCriterion, deleteCriterion, updateCriterion } from "../services/criterion.service";
+import { createStage, deleteStageCascade, updateStage } from "../services/stage.service";
 
 const router = Router();
 
 // ===== קבוצה א׳ =====
-// filterableFields מגדיר אילו פרמטרים מותרים ב-query string.
-// שדה שלא מופיע כאן פשוט יתעלמו ממנו.
-// למשרות יש ראוטר משלהן — יצירת משרה מעתיקה גם את תבנית הקטגוריה
+// filterableFields / populatableFields מגדירים מה מותר ב-query string.
+// create / update / remove דורסים את ההתנהגות הגנרית כשיש לוגיקה עסקית.
+// בשלבים ובקריטריונים זו הנעילה לפי סטטוס המשרה.
 router.use("/positions", positionsRouter);
 router.use("/job-categories", createGenericRouter(jobCategoryRepository));
-// לשלבים יש ראוטר משלהם — מחיקת שלב מוחקת גם את הקריטריונים שלו
-router.use("/stages", stagesRouter);
+router.use(
+  "/stages",
+  createGenericRouter(stageRepository, {
+    filterableFields: ["positionId"],
+    populatableFields: ["positionId"],
+    create: createStage,
+    update: updateStage,
+    remove: deleteStageCascade,
+  })
+);
 router.use(
   "/criteria",
   createGenericRouter(criterionRepository, {
     filterableFields: ["stageId", "type"],
     populatableFields: ["stageId"],
+    create: createCriterion,
+    update: updateCriterion,
+    remove: deleteCriterion,
   })
 );
 router.use("/companies", createGenericRouter(companyRepository));

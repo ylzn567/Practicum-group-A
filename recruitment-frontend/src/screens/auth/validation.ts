@@ -1,42 +1,40 @@
+import type { FormErrors } from "../../hooks/useForm";
+import { EMAIL_PATTERN, onlyErrors } from "../../utils/validation";
+
 export type AuthMode = "login" | "register";
 
-export interface AuthFormValues {
+export interface AuthFormValues extends Record<string, string> {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
 }
 
-export type AuthFormErrors = Partial<Record<keyof AuthFormValues, string>>;
+export const EMPTY_AUTH_FORM: AuthFormValues = { name: "", email: "", password: "", confirmPassword: "" };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-export function validateAuthForm(
+/** שם, חוזק סיסמה ואימות נבדקים רק בהרשמה. בכניסה מספיק שהשדות מלאים */
+export const validateAuthForm = (
   values: AuthFormValues,
   mode: AuthMode
-): AuthFormErrors {
-  const errors: AuthFormErrors = {};
+): FormErrors<AuthFormValues> => {
+  const isRegister = mode === "register";
+  const email = values.email.trim();
 
-  if (mode === "register" && values.name.trim().length < 2) {
-    errors.name = "יש להזין שם מלא";
-  }
-
-  if (!values.email.trim()) {
-    errors.email = "יש להזין כתובת אימייל";
-  } else if (!EMAIL_PATTERN.test(values.email.trim())) {
-    errors.email = "כתובת האימייל אינה תקינה";
-  }
-
-  if (!values.password) {
-    errors.password = "יש להזין סיסמה";
-  } else if (mode === "register" && values.password.length < MIN_PASSWORD_LENGTH) {
-    errors.password = `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`;
-  }
-
-  if (mode === "register" && values.confirmPassword !== values.password) {
-    errors.confirmPassword = "הסיסמאות אינן תואמות";
-  }
-
-  return errors;
-}
+  return onlyErrors({
+    name: isRegister && values.name.trim().length < 2 ? "יש להזין שם מלא" : undefined,
+    email: !email
+      ? "יש להזין כתובת אימייל"
+      : !EMAIL_PATTERN.test(email)
+        ? "כתובת האימייל אינה תקינה"
+        : undefined,
+    password: !values.password
+      ? "יש להזין סיסמה"
+      : isRegister && values.password.length < MIN_PASSWORD_LENGTH
+        ? `הסיסמה חייבת להכיל לפחות ${MIN_PASSWORD_LENGTH} תווים`
+        : undefined,
+    confirmPassword:
+      isRegister && values.confirmPassword !== values.password ? "הסיסמאות אינן תואמות" : undefined,
+  });
+};

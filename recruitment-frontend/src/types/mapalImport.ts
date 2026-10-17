@@ -1,17 +1,9 @@
+import type { CriterionTemplate } from "./jobCategory";
 import type { PositionLevel } from "./position";
-import type { CriterionType, ScoringMethod } from "./stage";
 
 // תואם ל-MapalDraft של הבאקאנד (mapalImport.service.ts)
 
-export interface DraftCriterion {
-  name: string;
-  type: CriterionType;
-  scoringMethod?: ScoringMethod;
-  targetValue?: number;
-  weightPercent?: number;
-  maxScore?: number;
-  descriptionGuide?: string;
-}
+export type DraftCriterion = CriterionTemplate;
 
 export interface DraftStage {
   name: string;

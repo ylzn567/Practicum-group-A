@@ -4,15 +4,16 @@
   gap: 0 16px;
 }
 
-.position-form__actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
 @media (max-width: 720px) {
   .position-form__grid {
     grid-template-columns: 1fr;
   }
+}
+
+.position-form__stages {
+  margin-top: 32px;
+}
+
+.position-form__stages > h2 {
+  margin-bottom: 16px;
 }

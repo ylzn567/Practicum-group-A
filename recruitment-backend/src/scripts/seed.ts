@@ -262,8 +262,8 @@ const positions: PositionSeed[] = [
     monthlyHours: 180,
     maxHourlyRate: 320,
     durationMonths: 24,
-    status: "IN_EVALUATION",
-    submissionDeadline: new Date("2026-10-15"),
+    status: "IN_REVIEW",
+    submissionDeadline: new Date("2026-10-01"),
   },
   {
     title: "מהנדס/ת DevOps ג׳וניור",
@@ -290,8 +290,8 @@ const positions: PositionSeed[] = [
     monthlyHours: 182,
     maxHourlyRate: 295,
     durationMonths: 36,
-    status: "APPROVED_FOR_TENDER",
-    submissionDeadline: new Date("2026-09-30"),
+    status: "PUBLISHED",
+    submissionDeadline: new Date("2026-11-15"),
   },
   {
     title: "מנהל/ת פרויקטי תשתית",
@@ -304,7 +304,7 @@ const positions: PositionSeed[] = [
     monthlyHours: 170,
     maxHourlyRate: 245,
     durationMonths: 18,
-    status: "IN_EVALUATION",
+    status: "PENDING_COMMITTEE_APPROVAL",
     submissionDeadline: new Date("2026-10-22"),
   },
   {
@@ -346,7 +346,7 @@ async function seed(): Promise<void> {
   const categoryIdByName = new Map(
     createdCategories.map((category) => [category.name, category._id])
   );
-  console.log(`נוצרו ${createdCategories.length} קטגוריות משרה`);
+  console.log(`נוצרו ${createdCategories.length} סוגי משרה`);
 
   const createdCompanies = await CompanyModel.insertMany(companies);
   console.log(`נוצרו ${createdCompanies.length} חברות`);
@@ -356,7 +356,7 @@ async function seed(): Promise<void> {
 
   for (const { categoryName, ...positionData } of positions) {
     const category = jobCategories.find((c) => c.name === categoryName);
-    if (!category) throw new Error(`קטגוריה לא נמצאה: ${categoryName}`);
+    if (!category) throw new Error(`סוג משרה לא נמצא: ${categoryName}`);
 
     const position = await PositionModel.create({
       ...positionData,

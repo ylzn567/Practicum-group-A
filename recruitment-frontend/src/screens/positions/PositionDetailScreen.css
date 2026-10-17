@@ -10,12 +10,6 @@
   margin-top: 6px;
 }
 
-.detail__actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 /* ===== ציר הסטטוס ===== */
 
 .status-track {

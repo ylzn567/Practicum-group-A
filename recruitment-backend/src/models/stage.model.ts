@@ -1,21 +1,17 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
 import { Stage } from "../types";
-import { Repository } from "../repositories/generic.repository";
+import { defineEntity } from "./defineEntity";
 
-const stageSchema = new Schema<Stage>(
-  {
-    positionId: {
-      type: Schema.Types.ObjectId,
-      ref: "Position",
-      required: true,
-    },
-    name: { type: String, required: true },
-    order: Number,
-    weightPercent: Number,
-    quota: Number,
-  },
-  { timestamps: true }
-);
+/** השדות של שלב, משותפים ל-Stage ולתבנית השלב שבתוך JobCategory */
+export const stageFields = {
+  name: { type: String, required: true },
+  order: Number,
+  weightPercent: Number,
+  quota: Number,
+};
 
-export const StageModel = model<Stage>("Stage", stageSchema);
-export const stageRepository = new Repository<Stage>(StageModel);
+export const { Model: StageModel, repository: stageRepository } =
+  defineEntity<Stage>("Stage", {
+    positionId: { type: Schema.Types.ObjectId, ref: "Position", required: true },
+    ...stageFields,
+  });

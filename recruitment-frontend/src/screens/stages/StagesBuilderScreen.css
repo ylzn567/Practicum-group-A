@@ -100,12 +100,6 @@
   margin-top: 16px;
 }
 
-.stage-card__actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .stage-card__row-actions {
   display: flex;
   gap: 6px;

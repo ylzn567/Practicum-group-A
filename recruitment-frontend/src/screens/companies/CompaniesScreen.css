@@ -2,12 +2,6 @@
   margin-bottom: 16px;
 }
 
-.companies__actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .companies__grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1.5fr;
