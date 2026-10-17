@@ -35,7 +35,7 @@ type PositionDetailScreenProps = {
 };
 
 const detailRows = (position: Position, categoryName: string) => [
-  { label: "קטגוריה", value: formatText(categoryName) },
+  { label: "סוג משרה", value: formatText(categoryName) },
   { label: "רמה", value: position.level ? POSITION_LEVEL_LABELS[position.level] : "—" },
   { label: "קוד אשכול", value: formatText(position.clusterCode) },
   { label: "קוד תפקיד", value: formatText(position.roleCode) },

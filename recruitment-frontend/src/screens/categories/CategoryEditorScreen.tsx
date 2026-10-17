@@ -42,8 +42,8 @@ export function CategoryEditorScreen({ categoryId, onSaved, onCancel }: Category
   return (
     <LoadGate
       load={load}
-      loadingText="טוען את הקטגוריה..."
-      errorTitle="לא הצלחנו לטעון את הקטגוריה"
+      loadingText="טוען את סוג המשרה..."
+      errorTitle="לא הצלחנו לטעון את סוג המשרה"
       action={{ label: "חזרה", onClick: onCancel }}
     >
       {(initial) => (
@@ -106,15 +106,15 @@ function CategoryEditor({
     <div className="page">
       <header className="page__header">
         <div>
-          <Heading level={1}>{categoryId ? "עריכת קטגוריה" : "קטגוריה חדשה"}</Heading>
+          <Heading level={1}>{categoryId ? "עריכת סוג משרה" : "סוג משרה חדש"}</Heading>
           <Text>
-            התבנית הזו מועתקת לכל משרה חדשה שנפתחת בקטגוריה. שינוי כאן לא משפיע על משרות שכבר
+            התבנית הזו מועתקת לכל משרה חדשה שנפתחת מסוג המשרה הזה. שינוי כאן לא משפיע על משרות שכבר
             קיימות.
           </Text>
         </div>
         <div className="page__actions">
           <Button onClick={handleSave} disabled={action.isRunning}>
-            {action.isRunning ? "שומר..." : "שמירת הקטגוריה"}
+            {action.isRunning ? "שומר..." : "שמירת סוג המשרה"}
           </Button>
           <Button variant="secondary" onClick={onCancel}>
             ביטול
@@ -137,7 +137,7 @@ function CategoryEditor({
 
       <div className="category__block">
         <Card>
-          <InputField form={details} name="name" label="שם הקטגוריה *" placeholder="לדוגמה: DevOps" />
+          <InputField form={details} name="name" label="שם סוג המשרה *" placeholder="לדוגמה: DevOps" />
           <TextAreaField form={details} name="description" label="תיאור" />
         </Card>
       </div>

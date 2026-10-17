@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { positionRepository } from "../models/position.model";
 import { StageModel } from "../models/stage.model";
 import { CriterionModel } from "../models/criterion.model";
+import { DEFAULT_DURATION_MONTHS, DEFAULT_MONTHLY_HOURS } from "../constants";
 import { BadRequestError } from "../middleware/errorHandler";
 import { deletePositionCascade } from "./position.service";
 import { Position, PositionLevel } from "../types";
@@ -526,13 +527,16 @@ export async function createPositionFromDraft(
   });
 
   if (input.categoryId && !Types.ObjectId.isValid(input.categoryId)) {
-    throw new BadRequestError("קטגוריית המשרה לא תקינה");
+    throw new BadRequestError("סוג המשרה לא תקין");
   }
 
   const position = await positionRepository.add({
     title,
     categoryId: input.categoryId ? new Types.ObjectId(input.categoryId) : undefined,
     level: input.level,
+    // הקובץ לא מכיל שעות ומשך התקשרות, ולכן מתחילים מברירות המחדל כמו בטופס
+    monthlyHours: DEFAULT_MONTHLY_HOURS,
+    durationMonths: DEFAULT_DURATION_MONTHS,
     status: "DRAFT",
   });
   const positionId = (position as Position & { _id: Types.ObjectId })._id;

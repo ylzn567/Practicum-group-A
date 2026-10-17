@@ -146,7 +146,7 @@ function Routed({ render }: { render: AppRoute["render"] }) {
 
 const NAV_LINKS = [
   { to: "/positions", label: "משרות" },
-  { to: "/categories", label: "קטגוריות" },
+  { to: "/categories", label: "סוגי משרה" },
   { to: "/companies", label: "חברות" },
 ];
 

@@ -131,9 +131,9 @@ export function MapalImportScreen({ onCreated, onCancel }: MapalImportScreenProp
                 <SelectField
                   form={form}
                   name="categoryId"
-                  label="קטגוריה"
-                  hint="לא חובה. הקטגוריה לא מעתיקה תבנית, כי המבנה בא מהקובץ."
-                  placeholder="ללא קטגוריה"
+                  label="סוג משרה"
+                  hint="לא חובה. סוג המשרה לא מעתיק תבנית, כי המבנה בא מהקובץ."
+                  placeholder="ללא סוג משרה"
                   options={(categories.data ?? []).map((category) => ({
                     value: category._id,
                     label: category.name,

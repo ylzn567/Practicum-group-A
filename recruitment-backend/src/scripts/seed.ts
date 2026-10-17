@@ -346,7 +346,7 @@ async function seed(): Promise<void> {
   const categoryIdByName = new Map(
     createdCategories.map((category) => [category.name, category._id])
   );
-  console.log(`נוצרו ${createdCategories.length} קטגוריות משרה`);
+  console.log(`נוצרו ${createdCategories.length} סוגי משרה`);
 
   const createdCompanies = await CompanyModel.insertMany(companies);
   console.log(`נוצרו ${createdCompanies.length} חברות`);
@@ -356,7 +356,7 @@ async function seed(): Promise<void> {
 
   for (const { categoryName, ...positionData } of positions) {
     const category = jobCategories.find((c) => c.name === categoryName);
-    if (!category) throw new Error(`קטגוריה לא נמצאה: ${categoryName}`);
+    if (!category) throw new Error(`סוג משרה לא נמצא: ${categoryName}`);
 
     const position = await PositionModel.create({
       ...positionData,

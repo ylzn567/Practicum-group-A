@@ -10,8 +10,8 @@ import type { JobCategory } from "../../types/jobCategory";
 import { POSITION_LEVEL_LABELS, POSITION_STATUS_LABELS } from "../../types/position";
 import type { PositionStatus } from "../../types/position";
 import {
-  EMPTY_POSITION_FORM,
   MAX_MONTHLY_HOURS,
+  NEW_POSITION_FORM,
   positionToForm,
   positionToPayload,
   todayInputValue,
@@ -35,9 +35,9 @@ export function PositionFormScreen({ positionId, ...rest }: PositionFormScreenPr
       categoriesApi.getAll(),
       positionId ? positionsApi.getById(positionId) : null,
     ]);
-    // משרה חדשה תמיד נוצרת כטיוטה
+    // משרה חדשה תמיד נוצרת כטיוטה, ומתחילה מברירות המחדל של שעות ומשך התקשרות
     const status: PositionStatus = position?.status ?? "DRAFT";
-    return { categories, status, initial: position ? positionToForm(position) : EMPTY_POSITION_FORM };
+    return { categories, status, initial: position ? positionToForm(position) : NEW_POSITION_FORM };
   }, [positionId]);
 
   return (
@@ -99,7 +99,7 @@ function PositionForm({
           <Text>
             {isEdit
               ? "פרטי המשרה נשמרים בכפתור למטה. השלבים והקריטריונים שמתחתם נשמרים כל אחד בנפרד."
-              : "הקטגוריה קובעת אילו שלבים וקריטריונים יועתקו למשרה."}
+              : "סוג המשרה קובע אילו שלבים וקריטריונים יועתקו למשרה."}
           </Text>
         </div>
       </header>
@@ -125,9 +125,9 @@ function PositionForm({
           <SelectField
             form={form}
             name="categoryId"
-            label={isEdit ? "קטגוריית משרה" : "קטגוריית משרה *"}
-            hint={isEdit ? "שינוי הקטגוריה לא משנה את השלבים הקיימים" : "קובעת את תבנית השלבים והקריטריונים"}
-            placeholder={isEdit ? "ללא קטגוריה" : "בחרו קטגוריה"}
+            label={isEdit ? "סוג משרה" : "סוג משרה *"}
+            hint={isEdit ? "שינוי סוג המשרה לא משנה את השלבים הקיימים" : "קובע את תבנית השלבים והקריטריונים"}
+            placeholder={isEdit ? "ללא סוג משרה" : "בחרו סוג משרה"}
             options={categories.map((category) => ({ value: category._id, label: category.name }))}
             disabled={locked("categoryId")}
           />

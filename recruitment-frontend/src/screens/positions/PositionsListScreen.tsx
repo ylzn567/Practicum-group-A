@@ -98,11 +98,11 @@ export function PositionsListScreen({
                   <Options options={STATUS_OPTIONS} placeholder="כל הסטטוסים" />
                 </Select>
               </Filter>
-              <Filter label="קטגוריה">
+              <Filter label="סוג משרה">
                 <Select value={categoryId} onChange={(e) => filters.set("categoryId", e.target.value)}>
                   <Options
                     options={categories.map((category) => ({ value: category._id, label: category.name }))}
-                    placeholder="כל הקטגוריות"
+                    placeholder="כל סוגי המשרה"
                   />
                 </Select>
               </Filter>
@@ -138,7 +138,7 @@ export function PositionsListScreen({
                       <thead>
                         <tr>
                           <th>כותרת</th>
-                          <th>קטגוריה</th>
+                          <th>סוג משרה</th>
                           <th>רמה</th>
                           <th>תעריף מרבי</th>
                           <th>דדליין הגשה</th>

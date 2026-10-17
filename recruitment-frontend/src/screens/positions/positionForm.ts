@@ -6,6 +6,10 @@ import { num, onlyErrors, positiveError, text } from "../../utils/validation";
 /** תקרת שעות חודשיות. אותו ערך נאכף גם בשרת (constants.ts) */
 export const MAX_MONTHLY_HOURS = 182;
 
+/** ברירות המחדל של משרה חדשה, לפי הנוהל. אותם ערכים בייבוא ממפ"ל בשרת (constants.ts) */
+export const DEFAULT_MONTHLY_HOURS = 180;
+export const DEFAULT_DURATION_MONTHS = 12;
+
 // כל השדות נשמרים כמחרוזות (כמו שהדפדפן מחזיר), וההמרה למספרים ולתאריך קורית פעם אחת ב-toPayload
 export interface PositionFormValues extends Record<string, string> {
   title: string;
@@ -31,6 +35,16 @@ export const EMPTY_POSITION_FORM: PositionFormValues = {
   maxHourlyRate: "",
   durationMonths: "",
   submissionDeadline: "",
+};
+
+/**
+ * ערכי ההתחלה של משרה חדשה. בעריכה שדה חסר נשאר ריק (EMPTY_POSITION_FORM), אחרת שמירה
+ * של משרה קיימת הייתה כותבת לה ערך שאף אחד לא בחר.
+ */
+export const NEW_POSITION_FORM: PositionFormValues = {
+  ...EMPTY_POSITION_FORM,
+  monthlyHours: String(DEFAULT_MONTHLY_HOURS),
+  durationMonths: String(DEFAULT_DURATION_MONTHS),
 };
 
 /** התאריך של היום בפורמט של <input type="date">, לפי השעון המקומי ולא UTC */
@@ -73,7 +87,7 @@ export const validatePositionForm = (
 ): FormErrors<PositionFormValues> =>
   onlyErrors({
     title: values.title.trim().length < 2 ? "יש להזין כותרת למשרה" : undefined,
-    categoryId: !initial && !values.categoryId ? "יש לבחור קטגוריית משרה" : undefined,
+    categoryId: !initial && !values.categoryId ? "יש לבחור סוג משרה" : undefined,
     monthlyHours:
       positiveError(values.monthlyHours, "היקף שעות חודשי") ??
       (Number(values.monthlyHours) > MAX_MONTHLY_HOURS

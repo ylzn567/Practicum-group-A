@@ -44,7 +44,7 @@ export const isContentLocked = (status: PositionStatus) =>
 
 const FIELD_LABELS = {
   title: "כותרת המשרה",
-  categoryId: "קטגוריה",
+  categoryId: "סוג משרה",
   clusterCode: "קוד אשכול",
   roleCode: "קוד תפקיד",
   level: "רמה",

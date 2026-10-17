@@ -27,26 +27,26 @@ export function CategoriesListScreen({ onCreate, onEdit, onBack }: CategoriesLis
 
   const handleDelete = (category: JobCategory, usage: number) => {
     if (usage > 0) {
-      window.alert(`אי אפשר למחוק את "${category.name}" — ${usage} משרות משויכות אליה.\nשנו להן קטגוריה קודם.`);
+      window.alert(`אי אפשר למחוק את "${category.name}" — ${usage} משרות משויכות אליו.\nשנו להן את סוג המשרה קודם.`);
       return;
     }
     action.run(async () => {
       await categoriesApi.remove(category._id);
       load.reload();
-    }, `למחוק את הקטגוריה "${category.name}"?`);
+    }, `למחוק את סוג המשרה "${category.name}"?`);
   };
 
   return (
-    <LoadGate load={load} loadingText="טוען קטגוריות..." errorTitle="לא הצלחנו לטעון את הקטגוריות">
+    <LoadGate load={load} loadingText="טוען סוגי משרה..." errorTitle="לא הצלחנו לטעון את סוגי המשרה">
       {({ categories, usage }) => (
         <div className="page">
           <header className="page__header">
             <div>
-              <Heading level={1}>קטגוריות משרה</Heading>
-              <Text>כל קטגוריה מחזיקה תבנית של שלבים וקריטריונים, שמועתקת למשרה חדשה.</Text>
+              <Heading level={1}>סוגי משרה</Heading>
+              <Text>כל סוג משרה מחזיק תבנית של שלבים וקריטריונים, שמועתקת למשרה חדשה.</Text>
             </div>
             <div className="page__actions">
-              <Button onClick={onCreate}>קטגוריה חדשה</Button>
+              <Button onClick={onCreate}>סוג משרה חדש</Button>
               <Button variant="secondary" onClick={onBack}>
                 חזרה למשרות
               </Button>
@@ -57,10 +57,10 @@ export function CategoriesListScreen({ onCreate, onEdit, onBack }: CategoriesLis
 
           {categories.length === 0 ? (
             <Card>
-              <Heading level={3}>אין עדיין קטגוריות</Heading>
-              <Text>בלי קטגוריה אי אפשר לפתוח משרה — היא קובעת את תבנית השלבים.</Text>
+              <Heading level={3}>אין עדיין סוגי משרה</Heading>
+              <Text>בלי סוג משרה אי אפשר לפתוח משרה — הוא קובע את תבנית השלבים.</Text>
               <div className="page__actions">
-                <Button onClick={onCreate}>יצירת הקטגוריה הראשונה</Button>
+                <Button onClick={onCreate}>יצירת סוג המשרה הראשון</Button>
               </div>
             </Card>
           ) : (

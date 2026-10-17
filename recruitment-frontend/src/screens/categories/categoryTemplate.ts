@@ -61,7 +61,7 @@ export function validateCategory(form: CategoryForm): string[] {
   const report = (label: string, errors: Record<string, string | undefined>) =>
     Object.values(errors).forEach((message) => message && problems.push(`${label}: ${message}`));
 
-  if (form.name.trim().length < 2) problems.push("יש להזין שם לקטגוריה");
+  if (form.name.trim().length < 2) problems.push("יש להזין שם לסוג המשרה");
   if (form.stages.length === 0) problems.push("יש להגדיר לפחות שלב אחד בתבנית");
 
   form.stages.forEach(({ stage, criteria }, index) => {

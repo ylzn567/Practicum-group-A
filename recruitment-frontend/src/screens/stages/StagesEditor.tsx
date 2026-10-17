@@ -84,7 +84,7 @@ export function StagesEditor({ positionId, readOnly = false }: { positionId: str
                 <Heading level={3}>אין עדיין שלבים במשרה הזו</Heading>
                 {!readOnly && (
                   <>
-                    <Text>הוסיפו שלב ראשון, או צרו את המשרה מקטגוריה שיש לה תבנית שלבים מוכנה.</Text>
+                    <Text>הוסיפו שלב ראשון, או צרו את המשרה מסוג משרה שיש לו תבנית שלבים מוכנה.</Text>
                     <div className="page__actions">
                       <Button onClick={addStage}>הוספת שלב ראשון</Button>
                     </div>
