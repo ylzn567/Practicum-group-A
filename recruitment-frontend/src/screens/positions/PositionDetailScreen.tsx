@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ErrorAlert, Notice } from "../../components/FormFields";
 import { LoadGate } from "../../components/LoadGate";
 import { Badge, Button, Card, Heading, Table, Text } from "../../design-system/components";
@@ -15,6 +16,7 @@ import {
   POSITION_STATUS_TONES,
 } from "../../types/position";
 import type { Position, PositionStatus } from "../../types/position";
+import { CRITERION_TYPE_LABELS } from "../../types/stage";
 import { formatCurrency, formatDate, formatText, toFileName } from "../../utils/format";
 import { hasScoredCriteria, sumCriteriaWeights } from "../stages/stageForms";
 import { buildReadinessChecks } from "./positionReadiness";
@@ -277,23 +279,49 @@ export function PositionDetailScreen({
                         const criteria = criteriaByStage[stage._id] ?? [];
                         const scoredWeight = sumCriteriaWeights(criteria);
                         return (
-                          <tr key={stage._id}>
-                            <td className="num">{stage.order ?? index + 1}</td>
-                            <td>{stage.name}</td>
-                            <td className="num">{stage.weightPercent ?? 0}%</td>
-                            <td className="num">{criteria.length}</td>
-                            <td className="num">
-                              {hasScoredCriteria(criteria) ? (
-                                <span className={scoredWeight === 100 ? "detail__ok" : "detail__warn"}>
-                                  {scoredWeight}%
-                                </span>
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td className="num">{stage.quota ?? "—"}</td>
-                            <td className="detail__pending">—</td>
-                          </tr>
+                          <Fragment key={stage._id}>
+                            <tr className="detail__stage-row">
+                              <td className="num">{stage.order ?? index + 1}</td>
+                              <td>{stage.name}</td>
+                              <td className="num">{stage.weightPercent ?? 0}%</td>
+                              <td className="num">{criteria.length}</td>
+                              <td className="num">
+                                {hasScoredCriteria(criteria) ? (
+                                  <span className={scoredWeight === 100 ? "detail__ok" : "detail__warn"}>
+                                    {scoredWeight}%
+                                  </span>
+                                ) : (
+                                  "—"
+                                )}
+                              </td>
+                              <td className="num">{stage.quota ?? "—"}</td>
+                              <td className="detail__pending">—</td>
+                            </tr>
+                            <tr className="detail__criteria-row">
+                              <td />
+                              <td colSpan={6}>
+                                {criteria.length === 0 ? (
+                                  <span className="detail__pending">אין קריטריונים בשלב הזה</span>
+                                ) : (
+                                  <ul className="detail__criteria">
+                                    {criteria.map((criterion) => (
+                                      <li key={criterion._id} className="detail__criterion">
+                                        <span>{criterion.name}</span>
+                                        <Badge tone={criterion.type === "BOOLEAN" ? "pending" : "published"}>
+                                          {CRITERION_TYPE_LABELS[criterion.type]}
+                                        </Badge>
+                                        {criterion.weightPercent != null && (
+                                          <span className="detail__criterion-weight">
+                                            {criterion.weightPercent}%
+                                          </span>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </td>
+                            </tr>
+                          </Fragment>
                         );
                       })}
                     </tbody>

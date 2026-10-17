@@ -150,6 +150,39 @@
   color: var(--rf-ink-faint);
 }
 
+/* שורת הקריטריונים מתחת לשלב נראית כחלק משורת השלב */
+.rf-table tr.detail__stage-row td {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.rf-table tr.detail__criteria-row td {
+  padding-top: 0;
+  padding-bottom: 12px;
+  font-size: 13px;
+}
+
+.detail__criteria {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.detail__criterion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rf-ink-muted);
+}
+
+.detail__criterion-weight {
+  color: var(--rf-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
 .detail__footnote {
   font-family: var(--rf-font-display);
   font-size: 12px;
