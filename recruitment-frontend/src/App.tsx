@@ -30,7 +30,14 @@ import type { AuthUser } from "./types/auth";
  */
 const DEV_KEY = "recruitment.devBypass";
 
+/**
+ * VITE_SKIP_AUTH=true (נקבע בזמן build, ב-Dockerfile של ה-frontend) מדלג על מסך הכניסה לגמרי,
+ * כך שהאתר שעולה ב-Coolify נפתח ישר ברשימת המשרות. בפיתוח מקומי (npm run dev) הוא לא מוגדר.
+ */
+const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === "true";
+
 function isDevBypass(): boolean {
+  if (SKIP_AUTH) return true;
   if (new URLSearchParams(window.location.search).has("dev")) {
     sessionStorage.setItem(DEV_KEY, "1");
   }
@@ -162,9 +169,11 @@ function AppShell({ user, onLogout, children }: { user: AuthUser | null; onLogou
             </NavLink>
           ))}
         </nav>
-        <Button variant="secondary" onClick={onLogout}>
-          יציאה
-        </Button>
+        {!SKIP_AUTH && (
+          <Button variant="secondary" onClick={onLogout}>
+            יציאה
+          </Button>
+        )}
       </header>
       {children}
     </>
