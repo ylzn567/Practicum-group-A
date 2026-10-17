@@ -1,9 +1,12 @@
 # מריץ את כל המערכת: מסד נתונים, שרת וממשק.
 #
-#   docker compose up --build                       הפעלה (האתר: http://localhost:8080)
+#   docker compose up --build                       הפעלה (האתר: http://localhost:8080, הפורטים מוגדרים ב-docker-compose.override.yml)
 #   docker compose --profile tools run --rm seed    מילוי נתוני דמו (מוחק את האוספים של קבוצה א׳!)
 #   docker compose down                             עצירה (הנתונים נשמרים)
 #   docker compose down -v                          עצירה ומחיקת הנתונים
+#
+# הקובץ הזה בלי פורטים חשופים בכוונה, כדי שיעבוד גם ב-Coolify (שם הדומיין מנותב לשירות frontend ופורט קבוע גורם להתנגשות בשרת).
+# docker compose מקומי טוען אוטומטית גם את docker-compose.override.yml שמוסיף את הפורטים.
 #
 # משתנים אופציונליים (בקובץ .env בשורש, ראו .env.example): FRONTEND_PORT, BACKEND_PORT, MONGO_URI
 
@@ -31,8 +34,8 @@ services:
     environment:
       - PORT=5000
       - *mongo-uri
-    ports:
-      - "${BACKEND_PORT:-5000}:5000"
+    expose:
+      - "5000"
     depends_on:
       mongo:
         condition: service_healthy
@@ -46,8 +49,8 @@ services:
   frontend:
     build: ./recruitment-frontend
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-8080}:80"
+    expose:
+      - "80"
     depends_on:
       backend:
         condition: service_healthy
