@@ -5,6 +5,9 @@ import App from "./App";
 import "./design-system/tokens.css";
 import "./design-system/components.css";
 import "./styles/app.css";
+import { applyStoredTheme } from "./hooks/useTheme";
+
+applyStoredTheme();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

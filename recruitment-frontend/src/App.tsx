@@ -20,6 +20,7 @@ import { PositionDetailScreen } from "./screens/positions/PositionDetailScreen";
 import { PositionFormScreen } from "./screens/positions/PositionFormScreen";
 import { PositionsListScreen } from "./screens/positions/PositionsListScreen";
 import { StagesBuilderScreen } from "./screens/stages/StagesBuilderScreen";
+import { useTheme } from "./hooks/useTheme";
 import { logout } from "./services/auth.service";
 import type { AuthUser } from "./types/auth";
 
@@ -158,6 +159,7 @@ const NAV_LINKS = [
 ];
 
 function AppShell({ user, onLogout, children }: { user: AuthUser | null; onLogout: () => void; children: ReactNode }) {
+  const { theme, toggle } = useTheme();
   return (
     <>
       <header className="app-bar">
@@ -169,6 +171,13 @@ function AppShell({ user, onLogout, children }: { user: AuthUser | null; onLogou
             </NavLink>
           ))}
         </nav>
+        <Button
+          variant="secondary"
+          onClick={toggle}
+          title={theme === "dark" ? "מעבר למצב בהיר" : "מעבר למצב כהה"}
+        >
+          {theme === "dark" ? "☀ מצב בהיר" : "☾ מצב כהה"}
+        </Button>
         {!SKIP_AUTH && (
           <Button variant="secondary" onClick={onLogout}>
             יציאה
